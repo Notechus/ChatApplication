@@ -9,8 +9,11 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
-public class Login extends JFrame {
+public class Login extends JFrame
+{
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTextField txtName;
@@ -22,10 +25,13 @@ public class Login extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public Login() {
-		try {
+	public Login()
+	{
+		try
+		{
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception ex) {
+		} catch (Exception ex)
+		{
 			// TODO Auto-generated catch block
 			ex.printStackTrace();
 		}
@@ -69,17 +75,44 @@ public class Login extends JFrame {
 		contentPane.add(lblPort);
 
 		JButton btnLogin = new JButton("Login");
+		btnLogin.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				String name = txtName.getText();
+				String address = txtIP.getText();
+				int port = Integer.parseInt(txtPort.getText());
+				// we can try to validate here
+
+				login(name, address, port);
+			}
+		});
 		btnLogin.setBounds(102, 246, 89, 23);
 		contentPane.add(btnLogin);
 	}
 
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
+	/**
+	 * Login stuff here
+	 */
+	private void login(String name, String address, int port)
+	{
+		dispose();
+		// System.out.println(name + ", " + address + ", " + port);
+		new Client(name, address, port);
+	}
+
+	public static void main(String[] args)
+	{
+		EventQueue.invokeLater(new Runnable()
+		{
+			public void run()
+			{
+				try
+				{
 					Login frame = new Login();
 					frame.setVisible(true);
-				} catch (Exception e) {
+				} catch (Exception e)
+				{
 					e.printStackTrace();
 				}
 			}
