@@ -11,6 +11,7 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import javax.swing.SwingConstants;
 
 public class Login extends JFrame
 {
@@ -32,7 +33,6 @@ public class Login extends JFrame
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception ex)
 		{
-			// TODO Auto-generated catch block
 			ex.printStackTrace();
 		}
 
@@ -40,7 +40,6 @@ public class Login extends JFrame
 		setTitle("Login");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(300, 380);
-		// setBounds(100, 100, 300, 380);
 		setLocationRelativeTo(null);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -48,15 +47,18 @@ public class Login extends JFrame
 		contentPane.setLayout(null);
 
 		txtName = new JTextField();
+		txtName.setHorizontalAlignment(SwingConstants.CENTER);
 		txtName.setBounds(82, 65, 130, 20);
 		contentPane.add(txtName);
 		txtName.setColumns(10);
 
 		JLabel lblName = new JLabel("Name:");
-		lblName.setBounds(124, 45, 46, 14);
+		lblName.setBounds(118, 45, 46, 14);
 		contentPane.add(lblName);
 
 		txtIP = new JTextField();
+		txtIP.setHorizontalAlignment(SwingConstants.CENTER);
+		txtIP.setText("localhost");
 		txtIP.setBounds(82, 121, 130, 20);
 		contentPane.add(txtIP);
 		txtIP.setColumns(10);
@@ -66,12 +68,14 @@ public class Login extends JFrame
 		contentPane.add(lblIpAdress);
 
 		txtPort = new JTextField();
+		txtPort.setHorizontalAlignment(SwingConstants.CENTER);
+		txtPort.setText("8192");
 		txtPort.setColumns(10);
 		txtPort.setBounds(82, 173, 130, 20);
 		contentPane.add(txtPort);
 
 		lblPort = new JLabel("Port:");
-		lblPort.setBounds(129, 154, 35, 14);
+		lblPort.setBounds(118, 152, 35, 14);
 		contentPane.add(lblPort);
 
 		JButton btnLogin = new JButton("Login");
@@ -97,8 +101,7 @@ public class Login extends JFrame
 	private void login(String name, String address, int port)
 	{
 		dispose();
-		// System.out.println(name + ", " + address + ", " + port);
-		new Client(name, address, port);
+		new ClientWindow(name, address, port);
 	}
 
 	public static void main(String[] args)
