@@ -11,12 +11,15 @@ import java.util.List;
 public class Server implements Runnable
 {
 	private List<ServerClient> clients = new ArrayList<>();
+	private List<Integer> clientResponse = new ArrayList<>();
 	// security bug with sending actual codes with messages eg user writes /dc/81223
 	// and disconnects some other user-( not existing in here)
 	private DatagramSocket socket;
 	private int port;
 	private boolean running = false;
 	private Thread run, manage, send, receive;
+
+	private final int MAX_ATTEMPTS = 5;
 
 	public Server(int port_)
 	{
@@ -50,7 +53,33 @@ public class Server implements Runnable
 			{
 				while (running)
 				{
-					// Managing here
+					sendToAll("/p/server");
+					try
+					{
+						Thread.sleep(2000); // sleep to wait for actual response(it might be slow)
+					} catch (InterruptedException ex)
+					{
+						ex.printStackTrace();
+					}
+					for (int i = 0; i < clients.size(); i++)
+					{
+						ServerClient c = clients.get(i);
+						if (!clientResponse.contains(c.getID()))
+						{
+							if (c.attempt >= MAX_ATTEMPTS)
+							{
+								disconnect(c.getID(), false);
+							} else
+							{
+								c.attempt++;
+							}
+						} else
+						{
+							clientResponse.remove(new Integer(c.getID()));
+							c.attempt = 0;
+						}
+					}
+
 				}
 			}
 		};
@@ -122,8 +151,8 @@ public class Server implements Runnable
 		{
 			// UUID id = UUID.randomUUID();
 			int id = UniqueIdentifier.getIdentifier();
-			clients.add(new ServerClient(text.substring(3, text.length()), packet.getAddress(), packet.getPort(), id));
-			System.out.println(text.substring(3, text.length()) + " " + id + "\n"); // wypisuje nazwe podlaczonego hosta
+			clients.add(new ServerClient(text.substring(3), packet.getAddress(), packet.getPort(), id));
+			// System.out.println(text.substring(3) + " " + id + "\n"); // wypisuje nazwe podlaczonego hosta
 			String ID = "/c/" + id;
 			send(ID.getBytes(), packet.getAddress(), packet.getPort());
 		} else if (text.startsWith("/m/"))
@@ -131,8 +160,11 @@ public class Server implements Runnable
 			sendToAll(text);
 		} else if (text.startsWith("/dc/"))
 		{
-			String id = text.substring(4, text.length());
+			String id = text.substring(4);
 			disconnect(Integer.parseInt(id), true);
+		} else if (text.startsWith("/p/"))
+		{
+			clientResponse.add(Integer.parseInt(text.substring(3)));
 		} else
 		{
 			System.out.println(text);
@@ -155,9 +187,11 @@ public class Server implements Runnable
 		if (status)
 		{
 			message = "User " + c.name + "(" + c.getID() + ") has disconnected.";
+			send(("/dc/").getBytes(), c.address, c.port);
 		} else
 		{
 			message = "User " + c.name + "(" + c.getID() + ") has timed out.";
+			send(("/dc/").getBytes(), c.address, c.port);
 		}
 		System.out.println(message);
 	}

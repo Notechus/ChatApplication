@@ -127,7 +127,10 @@ public class ClientWindow extends JFrame implements Runnable
 			{
 				if (e.getKeyCode() == KeyEvent.VK_ENTER)
 				{
-					send(txtMessage.getText());
+					if (client.connected)
+					{
+						send(txtMessage.getText());
+					}
 				}
 			}
 		});
@@ -145,7 +148,10 @@ public class ClientWindow extends JFrame implements Runnable
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				send(txtMessage.getText());
+				if (client.connected)
+				{
+					send(txtMessage.getText());
+				}
 			}
 		});
 		GridBagConstraints gbc_btnSend = new GridBagConstraints();
@@ -186,11 +192,19 @@ public class ClientWindow extends JFrame implements Runnable
 					if (message.startsWith("/c/"))
 					{
 						client.setID(Integer.parseInt(message.substring(3, message.length())));
+						client.connected = true;
 						console("Succesfully connected to server with ID: " + client.getID());
 					} else if (message.startsWith("/m/"))
 					{
 						String text = message.substring(3, message.length());
 						console(text);
+					} else if (message.startsWith("/p/"))
+					{
+						client.send(("/p/" + client.getID()).getBytes());
+					} else if (message.startsWith("/dc/"))
+					{
+						client.connected = false; // just in case(same as messages and send button)
+						console("You have timed out\n");
 					}
 				}
 			}

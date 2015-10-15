@@ -14,6 +14,7 @@ public class Client
 	private String name, address;
 	private int port;
 	private int ID = -1;
+	public boolean connected = false;
 
 	private InetAddress ip;
 	private Thread send;
