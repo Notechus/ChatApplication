@@ -88,12 +88,12 @@ public class ClientWindow extends JFrame implements Runnable
 
 		addWindowListener(new WindowAdapter()
 		{
-			public void windowClosed(WindowEvent arg0)
+			public void windowClosing(WindowEvent e)
 			{
 				String disconnect = "/dc/" + client.getID();
 				client.send(disconnect.getBytes());
-				client.close();
 				running = false;
+				client.close();
 			}
 		});
 

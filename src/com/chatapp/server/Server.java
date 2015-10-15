@@ -11,7 +11,8 @@ import java.util.List;
 public class Server implements Runnable
 {
 	private List<ServerClient> clients = new ArrayList<>();
-	// security bug with sending actual codes with messages eg. user writes /dc/81223
+	// security bug with sending actual codes with messages eg user writes /dc/81223
+	// and disconnects some other user-( not existing in here)
 	private DatagramSocket socket;
 	private int port;
 	private boolean running = false;
@@ -130,7 +131,7 @@ public class Server implements Runnable
 			sendToAll(text);
 		} else if (text.startsWith("/dc/"))
 		{
-			String id = text.substring(3, text.length());
+			String id = text.substring(4, text.length());
 			disconnect(Integer.parseInt(id), true);
 		} else
 		{
