@@ -1,31 +1,30 @@
 package com.chatapp;
 
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.DefaultCaret;
-
-import java.awt.GridBagLayout;
-import javax.swing.JTextArea;
-import java.awt.GridBagConstraints;
-import javax.swing.JButton;
-import java.awt.Insets;
-import javax.swing.JTextField;
-import java.awt.Font;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JList;
 
 public class ClientWindow extends JFrame implements Runnable
 {
@@ -38,6 +37,12 @@ public class ClientWindow extends JFrame implements Runnable
 	private JTextField txtMessage;
 	private JTextArea txtrHistory;
 	private DefaultCaret caret;
+	private JMenuBar menuBar;
+	private JMenu mnFile;
+	private JMenuItem mntmOnlineUsers;
+	private JMenuItem mntmExit;
+	private JMenu mnHelp;
+	private JList list;
 
 	// can use UUID class for ID or write own
 
@@ -81,10 +86,8 @@ public class ClientWindow extends JFrame implements Runnable
 		}
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(880, 550);
+		setMinimumSize(new Dimension(880, 550)); // not sure if its platform dependant
 		setLocationRelativeTo(null);
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
 
 		addWindowListener(new WindowAdapter()
 		{
@@ -97,11 +100,39 @@ public class ClientWindow extends JFrame implements Runnable
 			}
 		});
 
+		menuBar = new JMenuBar();
+		setJMenuBar(menuBar);
+
+		mnFile = new JMenu("File");
+		menuBar.add(mnFile);
+
+		mntmOnlineUsers = new JMenuItem("Online Users");
+		mntmOnlineUsers.addActionListener(new ActionListener()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+
+			}
+		});
+		mnFile.add(mntmOnlineUsers);
+
+		mntmExit = new JMenuItem("Exit");
+		mnFile.add(mntmExit);
+
+		mnHelp = new JMenu("Help");
+		menuBar.add(mnHelp);
+
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+
 		GridBagLayout gbl_contentPane = new GridBagLayout();
-		gbl_contentPane.columnWidths = new int[] { 28, 680, 165, 7 }; // sum 880
-		gbl_contentPane.rowHeights = new int[] { 35, 475, 40 }; // sum 550
-		gbl_contentPane.columnWeights = new double[] { 1.0, 1.0 };
-		gbl_contentPane.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
+		gbl_contentPane.rowWeights = new double[] { 0.0, 1.0, 0.0 };
+		gbl_contentPane.columnWeights = new double[] { 0.0, 0.0, 1.0, 0.0 };
+		gbl_contentPane.columnWidths = new int[] { 28, 655, 180, 7 }; // sum 880
+		gbl_contentPane.rowHeights = new int[] { 25, 485, 40 }; // sum 550
+		// gbl_contentPane.columnWeights = new double[] { 1.0, 1.0 };
+		// gbl_contentPane.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
 		contentPane.setLayout(gbl_contentPane);
 
 		txtrHistory = new JTextArea();
@@ -111,10 +142,12 @@ public class ClientWindow extends JFrame implements Runnable
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE); // this is platform dependant
 		JScrollPane scroll = new JScrollPane(txtrHistory);
 		GridBagConstraints scrollConstraints = new GridBagConstraints();
-		scrollConstraints.insets = new Insets(0, 0, 5, 5);
+		scrollConstraints.insets = new Insets(5, 5, 5, 5);
 		scrollConstraints.fill = GridBagConstraints.BOTH;
 		scrollConstraints.gridx = 0;
 		scrollConstraints.gridy = 0;
+		scrollConstraints.weightx = 1;
+		scrollConstraints.weighty = 1;
 		scrollConstraints.gridwidth = 2;
 		scrollConstraints.gridheight = 2;
 		scrollConstraints.insets = new Insets(5, 5, 0, 0);
@@ -134,12 +167,15 @@ public class ClientWindow extends JFrame implements Runnable
 				}
 			}
 		});
+
 		GridBagConstraints gbc_txtMessage = new GridBagConstraints();
-		gbc_txtMessage.insets = new Insets(0, 5, 0, 0);
+		gbc_txtMessage.insets = new Insets(0, 5, 0, 5);
 		gbc_txtMessage.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtMessage.gridx = 0;
 		gbc_txtMessage.gridy = 2;
 		gbc_txtMessage.gridwidth = 2;
+		gbc_txtMessage.weightx = 1;
+		gbc_txtMessage.weighty = 0;
 		contentPane.add(txtMessage, gbc_txtMessage);
 		txtMessage.setColumns(10);
 
@@ -155,10 +191,23 @@ public class ClientWindow extends JFrame implements Runnable
 			}
 		});
 		GridBagConstraints gbc_btnSend = new GridBagConstraints();
-		gbc_btnSend.insets = new Insets(0, 10, 0, 0);
+		gbc_btnSend.insets = new Insets(0, 10, 0, 5);
 		gbc_btnSend.gridx = 2;
 		gbc_btnSend.gridy = 2;
+		gbc_btnSend.weightx = 0;
+		gbc_btnSend.weighty = 0;
 		contentPane.add(btnSend, gbc_btnSend);
+
+		list = new JList();
+		GridBagConstraints gbc_list = new GridBagConstraints();
+		gbc_list.insets = new Insets(0, 15, 0, 0);
+		gbc_list.fill = GridBagConstraints.BOTH;
+		gbc_list.gridx = 2;
+		gbc_list.gridy = 1;
+		contentPane.add(list, gbc_list);
+
+		String[] listd = { "Ja", "Ty", "On", "Ona", "Nikt" };
+		list.setListData(listd);
 
 		setVisible(true);
 		txtMessage.requestFocusInWindow();

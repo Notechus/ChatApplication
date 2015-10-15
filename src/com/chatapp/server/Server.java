@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Server implements Runnable
 {
@@ -40,9 +41,87 @@ public class Server implements Runnable
 	public void run()
 	{
 		running = true;
-		System.out.println("Server started on port " + port);
+		console("Server started on port " + port);
 		manageClients();
 		receive();
+		Scanner scanner = new Scanner(System.in);
+		while (running)
+		{
+			String com = scanner.nextLine();
+			if (!com.startsWith("/"))
+			{
+				// dunno what yet
+			}
+			com = com.substring(1).trim();
+			if (com.equals("raw"))
+			{
+				// enable raw mode -> print every packet sent/recieved
+				// raw=!raw;
+			} else if (com.equals("clients"))
+			{
+				console("Clients:");
+				console("===================================");
+				for (int i = 0; i < clients.size(); i++)
+				{
+					ServerClient c = clients.get(i);
+					console(c.name + "(" + c.getID() + ") - " + c.address.toString() + ":" + c.port);
+				}
+				console("===================================");
+			} else if (com.equals("address"))
+			{
+				System.out.println(socket.getLocalSocketAddress());
+			} else if (com.startsWith("kick"))
+			{
+				// kick Seba or kick 819212
+				String name = com.substring(5).trim();
+				int id = -1;
+				boolean number = false;
+				try
+				{
+					id = Integer.parseInt(name);
+					number = true;
+				} catch (NumberFormatException ex)
+				{
+					number = false;
+				}
+				if (number)
+				{
+					boolean exists = false;
+					for (int i = 0; i < clients.size(); i++)
+					{
+						if (clients.get(i).getID() == id)
+						{
+							exists = true;
+							break;
+						}
+					}
+					if (exists)
+					{
+						disconnect(id, true);
+					} else
+					{
+						console("Client " + id + " doesn't exist");
+					}
+				} else
+				{
+					for (int i = 0; i < clients.size(); i++)
+					{
+						ServerClient c = clients.get(i);
+						if (name.equals(c.name))
+						{
+							disconnect(c.getID(), true);
+							break;
+						}
+					}
+				}
+			} else if (com.equals("quit"))
+			{
+
+			} else if (com.equals("start"))
+			{
+
+			}
+		}
 	}
 
 	private void manageClients()
@@ -95,7 +174,7 @@ public class Server implements Runnable
 				while (running)
 				{
 					// Receiving data
-					System.out.println(clients.size() + "\n");
+					// System.out.println(clients.size() + "\n");
 					byte[] data = new byte[1024];
 					String text = null;
 					DatagramPacket packet = new DatagramPacket(data, data.length);
@@ -108,7 +187,7 @@ public class Server implements Runnable
 					}
 					process(packet);
 					text = new String(packet.getData());
-					System.out.println(text); // prints messages to syso
+					// console(text); // prints messages to syso
 				}
 			}
 		};
@@ -152,7 +231,7 @@ public class Server implements Runnable
 			// UUID id = UUID.randomUUID();
 			int id = UniqueIdentifier.getIdentifier();
 			clients.add(new ServerClient(text.substring(3), packet.getAddress(), packet.getPort(), id));
-			// System.out.println(text.substring(3) + " " + id + "\n"); // wypisuje nazwe podlaczonego hosta
+			console(text.substring(3) + "(" + id + ") connected.");
 			String ID = "/c/" + id;
 			send(ID.getBytes(), packet.getAddress(), packet.getPort());
 		} else if (text.startsWith("/m/"))
@@ -167,32 +246,53 @@ public class Server implements Runnable
 			clientResponse.add(Integer.parseInt(text.substring(3)));
 		} else
 		{
-			System.out.println(text);
+			console(text);
 		}
 	}
 
 	private void disconnect(int id, boolean status)
 	{
 		ServerClient c = null;
+		boolean exists = false;
 		for (int i = 0; i < clients.size(); ++i)
 		{
 			if (clients.get(i).getID() == id)
 			{
 				c = clients.get(i);
 				clients.remove(i);
+				exists = true;
 				break;
 			}
 		}
 		String message = "";
-		if (status)
+		if (exists)
 		{
-			message = "User " + c.name + "(" + c.getID() + ") has disconnected.";
-			send(("/dc/").getBytes(), c.address, c.port);
-		} else
-		{
-			message = "User " + c.name + "(" + c.getID() + ") has timed out.";
-			send(("/dc/").getBytes(), c.address, c.port);
+			if (status)
+			{
+				message = "User " + c.name + "(" + c.getID() + ") has disconnected.";
+				send(("/dc/").getBytes(), c.address, c.port);
+			} else
+			{
+				message = "User " + c.name + "(" + c.getID() + ") has timed out.";
+				send(("/dc/").getBytes(), c.address, c.port);
+			}
 		}
-		System.out.println(message);
+		console(message);
+	}
+
+	public void console(String msg)
+	{
+		System.out.println(msg + "\n");
+	}
+
+	protected void finalize() throws Throwable
+	{
+		// dc each client
+		for (int i = 0; i < clients.size(); i++)
+		{
+			ServerClient c = clients.get(i);
+			disconnect(c.getID(), true);
+		}
+		sendToAll("Server has shutdown.\n");
 	}
 }

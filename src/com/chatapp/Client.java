@@ -9,7 +9,6 @@ import java.net.UnknownHostException;
 
 public class Client
 {
-	private static final long serialVersionUID = 1L;
 	private DatagramSocket socket;
 	private String name, address;
 	private int port;
