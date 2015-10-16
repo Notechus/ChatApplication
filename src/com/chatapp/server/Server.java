@@ -21,6 +21,7 @@ public class Server implements Runnable
 	private Thread run, manage, send, receive;
 
 	private final int MAX_ATTEMPTS = 5;
+	private boolean raw = false;;
 
 	public Server(int port_)
 	{
@@ -51,12 +52,16 @@ public class Server implements Runnable
 			if (!com.startsWith("/"))
 			{
 				// dunno what yet
+				continue;
 			}
 			com = com.substring(1).trim();
 			if (com.equals("raw"))
 			{
 				// enable raw mode -> print every packet sent/recieved
-				// raw=!raw;
+				if (raw) console("Raw mode on");
+				else
+					console("Raw mode off");
+				raw = !raw;
 			} else if (com.equals("clients"))
 			{
 				console("Clients:");
@@ -116,12 +121,32 @@ public class Server implements Runnable
 				}
 			} else if (com.equals("quit"))
 			{
-
+				quit();
 			} else if (com.equals("start"))
 			{
 
+			} else if (com.equals("help"))
+			{
+				printHelp();
+			} else
+			{
+				// in case /blahblah
+				console("Unknown command.");
+				printHelp();
 			}
 		}
+		scanner.close();
+	}
+
+	private void printHelp()
+	{
+		console("Here is a list of available commands:");
+		console("=====================================");
+		console("/raw - enables raw mode.");
+		console("/clients - shows all connected clients.");
+		console("/kick [users ID or username] - kicks a user.");
+		console("/help - shows this help message.");
+		console("/quit - shuts down the server.");
 	}
 
 	private void manageClients()
@@ -181,6 +206,9 @@ public class Server implements Runnable
 					try
 					{
 						socket.receive(packet);
+					} catch (SocketException ex)
+					{
+
 					} catch (IOException ex)
 					{
 						ex.printStackTrace();
@@ -250,6 +278,21 @@ public class Server implements Runnable
 		}
 	}
 
+	private void quit()
+	{
+		// dc each client
+		for (int i = 0; i < clients.size(); i++)
+		{
+			ServerClient c = clients.get(i);
+			disconnect(c.getID(), true);
+		}
+		sendToAll("Server has shutdown.");
+		console("Server has shutdown.\n");
+		// close the socket
+		running = false; // if you do this you will terminate whole server
+		socket.close();
+	}
+
 	private void disconnect(int id, boolean status)
 	{
 		ServerClient c = null;
@@ -282,17 +325,6 @@ public class Server implements Runnable
 
 	public void console(String msg)
 	{
-		System.out.println(msg + "\n");
-	}
-
-	protected void finalize() throws Throwable
-	{
-		// dc each client
-		for (int i = 0; i < clients.size(); i++)
-		{
-			ServerClient c = clients.get(i);
-			disconnect(c.getID(), true);
-		}
-		sendToAll("Server has shutdown.\n");
+		System.out.println(msg);
 	}
 }
