@@ -21,17 +21,20 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.DefaultCaret;
+
+import com.chatapp.networking.Packet;
+
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JList;
+import javax.swing.JLabel;
 
 public class ClientWindow extends JFrame implements Runnable
 {
 	private static final long serialVersionUID = 1L;
 	private Client client;
-	private Thread run, listen;
-	private boolean running = false;
+	private Thread run;
 
 	private JPanel contentPane;
 	private JTextField txtMessage;
@@ -42,7 +45,8 @@ public class ClientWindow extends JFrame implements Runnable
 	private JMenuItem mntmOnlineUsers;
 	private JMenuItem mntmExit;
 	private JMenu mnHelp;
-	private JList list;
+	private JList<String> list;
+	private JLabel lblOnline;
 
 	// can use UUID class for ID or write own
 
@@ -53,8 +57,8 @@ public class ClientWindow extends JFrame implements Runnable
 	{
 
 		setTitle("Chat Application: " + name_);
-		client = new Client(name_, address_, port_);
-		boolean connect = openConnection(address_);
+		client = new Client(this, name_, address_, port_);
+		boolean connect = openConnection();
 		if (!connect)
 		{
 			System.err.println("Connection failed");
@@ -63,16 +67,15 @@ public class ClientWindow extends JFrame implements Runnable
 		createWindow();
 		console("Attempting to connect as: " + name_);
 		String connection = "/c/" + name_;
-		client.send(connection.getBytes());
-		running = true;
+		send(Packet.Type.CONNECT, connection);
 		run = new Thread(this, "Running");
 		run.start();
 
 	}
 
-	private boolean openConnection(String address)
+	private boolean openConnection()
 	{
-		return client.openConnection(address);
+		return client.openConnection();
 	}
 
 	private void createWindow()
@@ -93,9 +96,8 @@ public class ClientWindow extends JFrame implements Runnable
 		{
 			public void windowClosing(WindowEvent e)
 			{
-				String disconnect = "/dc/" + client.getID();
-				client.send(disconnect.getBytes());
-				running = false;
+				String disconnect = "" + client.getID();
+				send(Packet.Type.DISCONNECT, disconnect); // method in client window redirecting to client -> separating code
 				client.close();
 			}
 		});
@@ -162,11 +164,18 @@ public class ClientWindow extends JFrame implements Runnable
 				{
 					if (client.connected)
 					{
-						send(txtMessage.getText());
+						send(Packet.Type.MESSAGE, txtMessage.getText());
 					}
 				}
 			}
 		});
+
+		lblOnline = new JLabel("Online");
+		GridBagConstraints gbc_lblOnline = new GridBagConstraints();
+		gbc_lblOnline.insets = new Insets(0, 0, 5, 5);
+		gbc_lblOnline.gridx = 2;
+		gbc_lblOnline.gridy = 0;
+		contentPane.add(lblOnline, gbc_lblOnline);
 
 		GridBagConstraints gbc_txtMessage = new GridBagConstraints();
 		gbc_txtMessage.insets = new Insets(0, 5, 0, 5);
@@ -186,7 +195,7 @@ public class ClientWindow extends JFrame implements Runnable
 			{
 				if (client.connected)
 				{
-					send(txtMessage.getText());
+					send(Packet.Type.MESSAGE, txtMessage.getText());
 				}
 			}
 		});
@@ -198,9 +207,9 @@ public class ClientWindow extends JFrame implements Runnable
 		gbc_btnSend.weighty = 0;
 		contentPane.add(btnSend, gbc_btnSend);
 
-		list = new JList();
+		list = new JList<>();
 		GridBagConstraints gbc_list = new GridBagConstraints();
-		gbc_list.insets = new Insets(0, 15, 0, 0);
+		gbc_list.insets = new Insets(0, 15, 5, 5);
 		gbc_list.fill = GridBagConstraints.BOTH;
 		gbc_list.gridx = 2;
 		gbc_list.gridy = 1;
@@ -218,47 +227,18 @@ public class ClientWindow extends JFrame implements Runnable
 		listen();
 	}
 
-	public void send(String message)
+	public void send(Packet.Type type, String message)
 	{
 		if (!message.equals(""))
 		{
-			message = client.getName() + ": " + message;
-			message = "/m/" + message;
-			client.send(message.getBytes());
+			client.send(type, message);
 			txtMessage.setText("");
 		}
 	}
 
 	public void listen()
 	{
-		listen = new Thread("Listen")
-		{
-			public void run()
-			{
-				while (running)
-				{
-					String message = client.receive();
-					if (message.startsWith("/c/"))
-					{
-						client.setID(Integer.parseInt(message.substring(3, message.length())));
-						client.connected = true;
-						console("Succesfully connected to server with ID: " + client.getID());
-					} else if (message.startsWith("/m/"))
-					{
-						String text = message.substring(3, message.length());
-						console(text);
-					} else if (message.startsWith("/p/"))
-					{
-						client.send(("/p/" + client.getID()).getBytes());
-					} else if (message.startsWith("/dc/"))
-					{
-						client.connected = false; // just in case(same as messages and send button)
-						console("You have timed out\n");
-					}
-				}
-			}
-		};
-		listen.start();
+		client.listen();
 	}
 
 	public void console(String message)

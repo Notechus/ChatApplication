@@ -1,6 +1,10 @@
 package com.chatapp.server;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -9,19 +13,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import com.chatapp.networking.Packet;
+
 public class Server implements Runnable
 {
 	private List<ServerClient> clients = new ArrayList<>();
 	private List<Integer> clientResponse = new ArrayList<>();
-	// security bug with sending actual codes with messages eg user writes /dc/81223
-	// and disconnects some other user-( not existing in here)
+
 	private DatagramSocket socket;
 	private int port;
 	private boolean running = false;
 	private Thread run, manage, send, receive;
+	private final int ID = 0; // for packets only i think
 
 	private final int MAX_ATTEMPTS = 5;
-	private boolean raw = false;;
+	private boolean raw = false;
 
 	public Server(int port_)
 	{
@@ -51,80 +57,33 @@ public class Server implements Runnable
 			String com = scanner.nextLine();
 			if (!com.startsWith("/"))
 			{
-				// dunno what yet
+				// i think it shouldn't be allowet to write anything but comments
 				continue;
 			}
 			com = com.substring(1).trim();
 			if (com.equals("raw"))
 			{
-				// enable raw mode -> print every packet sent/recieved
+				// enable raw mode -> print every packet sent/recieved <- TODO
 				if (raw) console("Raw mode on");
 				else
 					console("Raw mode off");
 				raw = !raw;
 			} else if (com.equals("clients"))
 			{
-				console("Clients:");
-				console("===================================");
-				for (int i = 0; i < clients.size(); i++)
-				{
-					ServerClient c = clients.get(i);
-					console(c.name + "(" + c.getID() + ") - " + c.address.toString() + ":" + c.port);
-				}
-				console("===================================");
+				printClients();
 			} else if (com.equals("address"))
 			{
 				System.out.println(socket.getLocalSocketAddress());
 			} else if (com.startsWith("kick"))
 			{
 				// kick Seba or kick 819212
-				String name = com.substring(5).trim();
-				int id = -1;
-				boolean number = false;
-				try
-				{
-					id = Integer.parseInt(name);
-					number = true;
-				} catch (NumberFormatException ex)
-				{
-					number = false;
-				}
-				if (number)
-				{
-					boolean exists = false;
-					for (int i = 0; i < clients.size(); i++)
-					{
-						if (clients.get(i).getID() == id)
-						{
-							exists = true;
-							break;
-						}
-					}
-					if (exists)
-					{
-						disconnect(id, true);
-					} else
-					{
-						console("Client " + id + " doesn't exist");
-					}
-				} else
-				{
-					for (int i = 0; i < clients.size(); i++)
-					{
-						ServerClient c = clients.get(i);
-						if (name.equals(c.name))
-						{
-							disconnect(c.getID(), true);
-							break;
-						}
-					}
-				}
+				kick(com.substring(5).trim());
 			} else if (com.equals("quit"))
 			{
 				quit();
 			} else if (com.equals("start"))
 			{
-
+				// TODO
 			} else if (com.equals("help"))
 			{
 				printHelp();
@@ -134,8 +93,65 @@ public class Server implements Runnable
 				console("Unknown command.");
 				printHelp();
 			}
+			scanner.close();
 		}
-		scanner.close();
+	}
+
+	private void kick(String name)
+	{
+
+		int id = -1;
+		boolean number = false;
+		try
+		{
+			id = Integer.parseInt(name);
+			number = true;
+		} catch (NumberFormatException ex)
+		{
+			number = false;
+		}
+		if (number)
+		{
+			boolean exists = false;
+			for (int i = 0; i < clients.size(); i++)
+			{
+				if (clients.get(i).getID() == id)
+				{
+					exists = true;
+					break;
+				}
+			}
+			if (exists)
+			{
+				disconnect(id, true);
+			} else
+			{
+				console("Client " + id + " doesn't exist");
+			}
+		} else // if not number then username
+		{
+			for (int i = 0; i < clients.size(); i++)
+			{
+				ServerClient c = clients.get(i);
+				if (name.equals(c.name))
+				{
+					disconnect(c.getID(), true);
+					break;
+				}
+			}
+		}
+	}
+
+	private void printClients()
+	{
+		console("Clients:");
+		console("===================================");
+		for (int i = 0; i < clients.size(); i++)
+		{
+			ServerClient c = clients.get(i);
+			console(c.name + "(" + c.getID() + ") - " + c.address.toString() + ":" + c.port);
+		}
+		console("===================================");
 	}
 
 	private void printHelp()
@@ -155,9 +171,10 @@ public class Server implements Runnable
 		{
 			public void run()
 			{
+				Packet ping = new Packet(ID, Packet.Type.PING, "server");
 				while (running)
 				{
-					sendToAll("/p/server");
+					sendToAll(ping);
 					try
 					{
 						Thread.sleep(2000); // sleep to wait for actual response(it might be slow)
@@ -183,7 +200,6 @@ public class Server implements Runnable
 							c.attempt = 0;
 						}
 					}
-
 				}
 			}
 		};
@@ -199,48 +215,57 @@ public class Server implements Runnable
 				while (running)
 				{
 					// Receiving data
-					// System.out.println(clients.size() + "\n");
-					byte[] data = new byte[1024];
-					String text = null;
+					byte[] data = new byte[65536];
 					DatagramPacket packet = new DatagramPacket(data, data.length);
+					Packet p = null;
 					try
 					{
 						socket.receive(packet);
+						ByteArrayInputStream in = new ByteArrayInputStream(data);
+						ObjectInputStream is = new ObjectInputStream(in);
+						p = (Packet) is.readObject();
 					} catch (SocketException ex)
 					{
 
 					} catch (IOException ex)
 					{
 						ex.printStackTrace();
+					} catch (ClassNotFoundException ex)
+					{
+						ex.printStackTrace();
 					}
-					process(packet);
-					text = new String(packet.getData());
-					// console(text); // prints messages to syso
+					process(p, packet.getAddress(), packet.getPort());
+					console(p.message); // prints messages to syso
 				}
 			}
 		};
 		receive.start();
 	}
 
-	private void sendToAll(String message)
+	private void sendToAll(Packet packet)
 	{
 		for (int i = 0; i < clients.size(); i++)
 		{
 			ServerClient client = clients.get(i);
-			send(message.getBytes(), client.address, client.port);
+			send(packet, client.address, client.port);
 
 		}
 	}
 
-	private void send(byte[] data, InetAddress address, int port)
+	private void send(Packet p, InetAddress address, int port)
 	{
 		send = new Thread("Send")
 		{
 			public void run()
 			{
-				DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+
 				try
 				{
+					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+					ObjectOutputStream os = new ObjectOutputStream(outputStream);
+					os.writeObject(p);
+					byte[] data = outputStream.toByteArray();
+					DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
 					socket.send(packet);
 				} catch (IOException ex)
 				{
@@ -251,30 +276,31 @@ public class Server implements Runnable
 		send.start();
 	}
 
-	private void process(DatagramPacket packet)
+	private void process(Packet packet, InetAddress address, int port)
 	{
-		String text = new String(packet.getData()).trim();
-		if (text.startsWith("/c/"))
+		// String text = new String(packet.getData()).trim();
+		Packet.Type type = packet.type;
+		if (type == Packet.Type.CONNECT)
 		{
 			// UUID id = UUID.randomUUID();
 			int id = UniqueIdentifier.getIdentifier();
-			clients.add(new ServerClient(text.substring(3), packet.getAddress(), packet.getPort(), id));
-			console(text.substring(3) + "(" + id + ") connected.");
-			String ID = "/c/" + id;
-			send(ID.getBytes(), packet.getAddress(), packet.getPort());
-		} else if (text.startsWith("/m/"))
+			clients.add(new ServerClient(packet.message, address, port, id));
+			console(packet.message + "(" + id + ") connected.");
+			String IDs = "" + id;
+			send(new Packet(ID, Packet.Type.CONNECT, IDs), address, port);
+		} else if (type == Packet.Type.MESSAGE)
 		{
-			sendToAll(text);
-		} else if (text.startsWith("/dc/"))
+			sendToAll(packet);
+		} else if (type == Packet.Type.DISCONNECT)
 		{
-			String id = text.substring(4);
+			String id = packet.message;
 			disconnect(Integer.parseInt(id), true);
-		} else if (text.startsWith("/p/"))
+		} else if (type == Packet.Type.PING)
 		{
-			clientResponse.add(Integer.parseInt(text.substring(3)));
+			clientResponse.add(Integer.parseInt(packet.message));
 		} else
 		{
-			console(text);
+			console(packet.message);
 		}
 	}
 
@@ -286,8 +312,8 @@ public class Server implements Runnable
 			ServerClient c = clients.get(i);
 			disconnect(c.getID(), true);
 		}
-		sendToAll("Server has shutdown.");
-		console("Server has shutdown.\n");
+		sendToAll(new Packet(ID, Packet.Type.MESSAGE, "Server has shutdown."));
+		console("Server has shutdown.");
 		// close the socket
 		running = false; // if you do this you will terminate whole server
 		socket.close();
@@ -313,11 +339,11 @@ public class Server implements Runnable
 			if (status)
 			{
 				message = "User " + c.name + "(" + c.getID() + ") has disconnected.";
-				send(("/dc/").getBytes(), c.address, c.port);
+				send(new Packet(ID, Packet.Type.DISCONNECT, ""), c.address, c.port);
 			} else
 			{
 				message = "User " + c.name + "(" + c.getID() + ") has timed out.";
-				send(("/dc/").getBytes(), c.address, c.port);
+				send(new Packet(ID, Packet.Type.DISCONNECT, ""), c.address, c.port);
 			}
 		}
 		console(message);
