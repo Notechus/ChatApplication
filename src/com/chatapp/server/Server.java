@@ -57,16 +57,20 @@ public class Server implements Runnable
 			String com = scanner.nextLine();
 			if (!com.startsWith("/"))
 			{
-				// i think it shouldn't be allowet to write anything but comments
+				// i think it shouldn't be allowed to write anything but comments
 				continue;
 			}
 			com = com.substring(1).trim();
 			if (com.equals("raw"))
 			{
-				// enable raw mode -> print every packet sent/recieved <- TODO
-				if (raw) console("Raw mode on");
-				else
+				// enable raw mode -> print every packet sent/received <- TODO
+				if (raw)
+				{
 					console("Raw mode off");
+				} else
+				{
+					console("Raw mode on");
+				}
 				raw = !raw;
 			} else if (com.equals("clients"))
 			{
@@ -87,14 +91,17 @@ public class Server implements Runnable
 			} else if (com.equals("help"))
 			{
 				printHelp();
+			} else if (com.equals("history"))
+			{
+				// TODO
 			} else
 			{
 				// in case /blahblah
 				console("Unknown command.");
 				printHelp();
 			}
-			scanner.close();
 		}
+		scanner.close();
 	}
 
 	private void kick(String name)
@@ -235,7 +242,7 @@ public class Server implements Runnable
 						ex.printStackTrace();
 					}
 					process(p, packet.getAddress(), packet.getPort());
-					console(p.message); // prints messages to syso
+					if (raw) console(p.toString()); // prints messages to syso
 				}
 			}
 		};
@@ -267,6 +274,7 @@ public class Server implements Runnable
 					byte[] data = outputStream.toByteArray();
 					DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
 					socket.send(packet);
+					if (raw) console(p.toString());
 				} catch (IOException ex)
 				{
 					ex.printStackTrace();
@@ -278,7 +286,6 @@ public class Server implements Runnable
 
 	private void process(Packet packet, InetAddress address, int port)
 	{
-		// String text = new String(packet.getData()).trim();
 		Packet.Type type = packet.type;
 		if (type == Packet.Type.CONNECT)
 		{
@@ -287,17 +294,17 @@ public class Server implements Runnable
 			clients.add(new ServerClient(packet.message, address, port, id));
 			console(packet.message + "(" + id + ") connected.");
 			String IDs = "" + id;
+			console(IDs);
 			send(new Packet(ID, Packet.Type.CONNECT, IDs), address, port);
 		} else if (type == Packet.Type.MESSAGE)
 		{
 			sendToAll(packet);
 		} else if (type == Packet.Type.DISCONNECT)
 		{
-			String id = packet.message;
-			disconnect(Integer.parseInt(id), true);
+			disconnect(packet.ID, true);
 		} else if (type == Packet.Type.PING)
 		{
-			clientResponse.add(Integer.parseInt(packet.message));
+			clientResponse.add(packet.ID);
 		} else
 		{
 			console(packet.message);
@@ -307,12 +314,12 @@ public class Server implements Runnable
 	private void quit()
 	{
 		// dc each client
+		sendToAll(new Packet(ID, Packet.Type.MESSAGE, "Server has shutdown."));
 		for (int i = 0; i < clients.size(); i++)
 		{
 			ServerClient c = clients.get(i);
 			disconnect(c.getID(), true);
 		}
-		sendToAll(new Packet(ID, Packet.Type.MESSAGE, "Server has shutdown."));
 		console("Server has shutdown.");
 		// close the socket
 		running = false; // if you do this you will terminate whole server

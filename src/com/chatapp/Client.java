@@ -31,6 +31,7 @@ public class Client
 		this.name = name_;
 		this.address = address_;
 		this.port = port_;
+		window_ref = parent;
 		running = true;
 	}
 
@@ -107,7 +108,7 @@ public class Client
 			{
 				try
 				{
-					Packet p = new Packet(ID, type, message);
+					Packet p = new Packet(ID, type, message); // sends correct id
 					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 					ObjectOutputStream os = new ObjectOutputStream(outputStream);
 					os.writeObject(p);
@@ -145,8 +146,9 @@ public class Client
 						send(packet.type, "ping");
 					} else if (packet.type == Packet.Type.DISCONNECT)
 					{
-						connected = false; // just in case(same as messages and send button)
-						console("You have timed out\n");
+						console("You have timed out");
+						connected = false;
+
 					}
 				}
 			}

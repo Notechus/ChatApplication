@@ -66,8 +66,7 @@ public class ClientWindow extends JFrame implements Runnable
 		}
 		createWindow();
 		console("Attempting to connect as: " + name_);
-		String connection = "/c/" + name_;
-		send(Packet.Type.CONNECT, connection);
+		send(Packet.Type.CONNECT, name_);
 		run = new Thread(this, "Running");
 		run.start();
 

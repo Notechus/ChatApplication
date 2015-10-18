@@ -11,15 +11,16 @@ public class Packet implements Serializable
 	// remember: shouldn't add InetAddres or port here
 	// actually we should on the server - extract from DatagramPacket
 
-	public Packet()
-	{
-
-	}
-
 	public Packet(int ID_, Type type_, String message_)
 	{
+		this.ID = ID_;
 		this.type = type_;
 		this.message = message_;
+	}
+
+	public String toString()
+	{
+		return type + " " + message + " " + ID;
 	}
 
 	public enum Type
