@@ -1,7 +1,6 @@
 package com.chatapp;
 
 import java.awt.EventQueue;
-
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -48,7 +47,7 @@ public class Login extends JFrame
 
 		txtName = new JTextField();
 		txtName.setHorizontalAlignment(SwingConstants.CENTER);
-		txtName.setBounds(82, 65, 130, 20);
+		txtName.setBounds(82, 65, 130, 25);
 		contentPane.add(txtName);
 		txtName.setColumns(10);
 
@@ -59,19 +58,20 @@ public class Login extends JFrame
 		txtIP = new JTextField();
 		txtIP.setHorizontalAlignment(SwingConstants.CENTER);
 		txtIP.setText("localhost");
-		txtIP.setBounds(82, 121, 130, 20);
+		txtIP.setBounds(82, 121, 130, 25);
 		contentPane.add(txtIP);
 		txtIP.setColumns(10);
 
 		lblIpAdress = new JLabel("IP Adress:");
-		lblIpAdress.setBounds(118, 103, 57, 14);
+		lblIpAdress.setBounds(118, 103, 118, 14);
 		contentPane.add(lblIpAdress);
 
 		txtPort = new JTextField();
+		// txtPort.setFont(new Font("Monospaced", Font.PLAIN, 19));
 		txtPort.setHorizontalAlignment(SwingConstants.CENTER);
 		txtPort.setText("8192");
 		txtPort.setColumns(10);
-		txtPort.setBounds(82, 173, 130, 20);
+		txtPort.setBounds(82, 173, 130, 25);
 		contentPane.add(txtPort);
 
 		lblPort = new JLabel("Port:");

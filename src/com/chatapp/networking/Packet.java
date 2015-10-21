@@ -5,7 +5,7 @@ import java.io.Serializable;
 public class Packet implements Serializable
 {
 	private static final long serialVersionUID = 1L;
-	public int ID; // server will have reserver 0 ID
+	public int ID; // server will have reserved 0 ID
 	public Type type; // enum type
 	public String message;
 	// remember: shouldn't add InetAddres or port here
@@ -25,6 +25,7 @@ public class Packet implements Serializable
 
 	public enum Type
 	{
-		CONNECT, DISCONNECT, MESSAGE, DIRECT_MESSAGE, PING, ACK // ACK - acknowlegment from server, will be used later
+		CONNECT, DISCONNECT, MESSAGE, DIRECT_MESSAGE, PING, ACK
+		// ACK - acknowledgement from server, will be used later
 	}
 }

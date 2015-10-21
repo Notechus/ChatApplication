@@ -10,6 +10,15 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SealedObject;
+import javax.crypto.spec.SecretKeySpec;
 
 import com.chatapp.networking.Packet;
 
@@ -26,6 +35,19 @@ public class Client
 	private Thread send, listen;
 	private ClientWindow window_ref;
 
+	// type of currently used cipher
+	//private final String cipher_const = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
+	private final String cipher_const = "AES";
+	// password for encrypting packets
+	private final String encrypt_passwd = "Somerandompasswd"; // 16
+
+	/*
+	 * TODO: add encrypting to packets, add user-user communication(necessary to
+	 * add new packet type for this), add acknowledgement packet, get separate
+	 * udp for ping and dc, add logging system, add exceptions management
+	 * improve gui, add sounds, add database, change login for users from db,
+	 * add registration, add new uid system
+	 */
 	public Client(ClientWindow parent, String name_, String address_, int port_)
 	{
 		this.name = name_;
@@ -82,19 +104,27 @@ public class Client
 	{
 		byte[] data = new byte[65536];
 		DatagramPacket packet = new DatagramPacket(data, data.length);
+		SealedObject d_packet = null;
 		Packet p = null;
 		try
 		{
 			socket.receive(packet);
 			ByteArrayInputStream in = new ByteArrayInputStream(data);
 			ObjectInputStream is = new ObjectInputStream(in);
-			p = (Packet) is.readObject();
+			d_packet = (SealedObject) is.readObject();
+			p = decrypt(d_packet);
 		} catch (IOException ex)
 		{
 			ex.printStackTrace();
 		} catch (ClassNotFoundException ex)
 		{
 			ex.printStackTrace();
+		} catch (NoSuchAlgorithmException e)
+		{
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e)
+		{
+			e.printStackTrace();
 		}
 
 		return p;
@@ -108,20 +138,80 @@ public class Client
 			{
 				try
 				{
-					Packet p = new Packet(ID, type, message); // sends correct id
+					Packet p = new Packet(ID, type, message); // sends id
+					SealedObject e_packet = encrypt(p);
+					// make wrapper class for encrypted packet
 					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 					ObjectOutputStream os = new ObjectOutputStream(outputStream);
-					os.writeObject(p);
+					os.writeObject(e_packet);
 					byte[] data = outputStream.toByteArray();
 					DatagramPacket packet = new DatagramPacket(data, data.length, ip, port);
 					socket.send(packet);
 				} catch (IOException ex)
 				{
 					ex.printStackTrace();
+				} catch (NoSuchAlgorithmException e)
+				{
+					e.printStackTrace();
+				} catch (NoSuchPaddingException e)
+				{
+					e.printStackTrace();
 				}
 			}
 		};
 		send.start();
+	}
+
+	// TODO
+	protected SealedObject encrypt(final Packet p) throws NoSuchAlgorithmException, NoSuchPaddingException
+	{
+		SecretKeySpec message = new SecretKeySpec(encrypt_passwd.getBytes(), cipher_const);
+		Cipher c = Cipher.getInstance(cipher_const);
+		SealedObject encrypted_message = null;
+		try
+		{
+			c.init(Cipher.ENCRYPT_MODE, message);
+			encrypted_message = new SealedObject(p, c);
+		} catch (InvalidKeyException e)
+		{
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e)
+		{
+			e.printStackTrace();
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		return encrypted_message;
+	}
+
+	// TODO
+	protected Packet decrypt(final SealedObject p) throws NoSuchAlgorithmException, NoSuchPaddingException
+	{
+		SecretKeySpec message = new SecretKeySpec(encrypt_passwd.getBytes(), cipher_const);
+		Cipher c = Cipher.getInstance(cipher_const);
+		Packet decrypted_message = null;
+		try
+		{
+			c.init(Cipher.DECRYPT_MODE, message);
+			decrypted_message = (Packet) p.getObject(c);
+		} catch (InvalidKeyException e)
+		{
+			e.printStackTrace();
+		} catch (ClassNotFoundException e)
+		{
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e)
+		{
+			e.printStackTrace();
+		} catch (BadPaddingException e)
+		{
+			e.printStackTrace();
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		return decrypted_message;
 	}
 
 	public void listen()

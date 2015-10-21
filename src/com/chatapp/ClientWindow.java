@@ -88,7 +88,8 @@ public class ClientWindow extends JFrame implements Runnable
 		}
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(880, 550);
-		setMinimumSize(new Dimension(880, 550)); // not sure if its platform dependant
+		setMinimumSize(new Dimension(880, 550)); // not sure if its platform
+													// dependant
 		setLocationRelativeTo(null);
 
 		addWindowListener(new WindowAdapter()
@@ -96,7 +97,11 @@ public class ClientWindow extends JFrame implements Runnable
 			public void windowClosing(WindowEvent e)
 			{
 				String disconnect = "" + client.getID();
-				send(Packet.Type.DISCONNECT, disconnect); // method in client window redirecting to client -> separating code
+				send(Packet.Type.DISCONNECT, disconnect); // method in client
+															// window
+															// redirecting to
+															// client ->
+															// separating code
 				client.close();
 			}
 		});
@@ -128,10 +133,14 @@ public class ClientWindow extends JFrame implements Runnable
 		setContentPane(contentPane);
 
 		GridBagLayout gbl_contentPane = new GridBagLayout();
-		gbl_contentPane.rowWeights = new double[] { 0.0, 1.0, 0.0 };
-		gbl_contentPane.columnWeights = new double[] { 0.0, 0.0, 1.0, 0.0 };
-		gbl_contentPane.columnWidths = new int[] { 28, 655, 180, 7 }; // sum 880
-		gbl_contentPane.rowHeights = new int[] { 25, 485, 40 }; // sum 550
+		gbl_contentPane.rowWeights = new double[]
+		{ 0.0, 1.0, 0.0 };
+		gbl_contentPane.columnWeights = new double[]
+		{ 0.0, 0.0, 1.0, 0.0 };
+		gbl_contentPane.columnWidths = new int[]
+		{ 28, 655, 180, 7 }; // sum 880
+		gbl_contentPane.rowHeights = new int[]
+		{ 25, 485, 40 }; // sum 550
 		// gbl_contentPane.columnWeights = new double[] { 1.0, 1.0 };
 		// gbl_contentPane.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
 		contentPane.setLayout(gbl_contentPane);
@@ -140,7 +149,8 @@ public class ClientWindow extends JFrame implements Runnable
 		txtrHistory.setFont(new Font("Monospaced", Font.PLAIN, 12));
 		txtrHistory.setEditable(false);
 		caret = (DefaultCaret) txtrHistory.getCaret();
-		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE); // this is platform dependant
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE); // this is platform
+															// dependant
 		JScrollPane scroll = new JScrollPane(txtrHistory);
 		GridBagConstraints scrollConstraints = new GridBagConstraints();
 		scrollConstraints.insets = new Insets(5, 5, 5, 5);
@@ -214,7 +224,8 @@ public class ClientWindow extends JFrame implements Runnable
 		gbc_list.gridy = 1;
 		contentPane.add(list, gbc_list);
 
-		String[] listd = { "Ja", "Ty", "On", "Ona", "Nikt" };
+		String[] listd =
+		{ "Ja", "Ty", "On", "Ona", "Nikt" };
 		list.setListData(listd);
 
 		setVisible(true);
