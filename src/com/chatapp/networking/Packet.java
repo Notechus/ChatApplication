@@ -8,9 +8,8 @@ public class Packet implements Serializable
 	public int ID; // server will have reserved 0 ID
 	public Type type; // enum type
 	public String message;
-	// remember: shouldn't add InetAddres or port here
-	// actually we should on the server - extract from DatagramPacket
 
+	// remember: shouldn't add InetAddres or port here
 	public Packet(int ID_, Type type_, String message_)
 	{
 		this.ID = ID_;

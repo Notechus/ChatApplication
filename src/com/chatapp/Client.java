@@ -22,31 +22,56 @@ import javax.crypto.spec.SecretKeySpec;
 
 import com.chatapp.networking.Packet;
 
+/**
+ * Chat Client class responsible for client side of chat connection
+ * 
+ * @author notechus
+ */
 public class Client
 {
+	/** UDP socket used to send and receive data */
 	private DatagramSocket socket;
+	/** Client's name and IP address */
 	private String name, address;
+	/** Client's port */
 	private int port;
+	/** Client's ID set by server */
 	private int ID = -1;
+	/** Connection flag */
 	public boolean connected = false;
+	/** Running flag */
 	private boolean running = false;
 
+	/** Client's ip converted to Inet class */
 	private InetAddress ip;
+	/** Client threads: sending and listening for data */
 	private Thread send, listen;
+	/** Reference to parent GUI window */
 	private ClientWindow window_ref;
 
-	// type of currently used cipher
-	//private final String cipher_const = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
+	/** Type of used cipher */
 	private final String cipher_const = "AES";
-	// password for encrypting packets
+	// password for encrypting packets, should be in file or sth (or key)
+	/** Password for encryption and decryption */
 	private final String encrypt_passwd = "Somerandompasswd"; // 16
 
 	/*
-	 * TODO: add encrypting to packets, add user-user communication(necessary to
-	 * add new packet type for this), add acknowledgement packet, get separate
-	 * udp for ping and dc, add logging system, add exceptions management
-	 * improve gui, add sounds, add database, change login for users from db,
-	 * add registration, add new uid system
+	 * TODO: add encrypting to packets(almost done), add user-user
+	 * communication(necessary to add new packet type for this), add
+	 * acknowledgement packet, get separate udp for ping and dc, add logging
+	 * system, add exceptions management improve gui, add sounds, add database,
+	 * change login for users from db, add registration, add new uid system,
+	 * unique id for user stored in db -> will provide friends and will help
+	 * with login stuff. Finally we might want to replace all chat with sth else
+	 * like news feed.
+	 */
+	/**
+	 * Constructs Client with given parameters
+	 * 
+	 * @param parent reference to parent GUI
+	 * @param name_ Client's name
+	 * @param address_ Client's IP address
+	 * @param port_ Client's port
 	 */
 	public Client(ClientWindow parent, String name_, String address_, int port_)
 	{
@@ -57,31 +82,63 @@ public class Client
 		running = true;
 	}
 
+	/**
+	 * Getter for name
+	 * 
+	 * @return Client's name
+	 */
 	public String getName()
 	{
 		return name;
 	}
 
+	/**
+	 * Getter for address
+	 * 
+	 * @return Client's ip address
+	 */
 	public String getAddress()
 	{
 		return address;
 	}
 
+	/**
+	 * Getter for port
+	 * 
+	 * @return Client's port
+	 */
 	public int getPort()
 	{
 		return port;
 	}
 
-	public void setID(int id)
+	/**
+	 * Setter for Client's ID. Should be invisible outside class, because only
+	 * Server can assign ID
+	 * 
+	 * @param id Id which will be assigned to user
+	 */
+	private void setID(int id)
 	{
 		this.ID = id;
 	}
 
+	/**
+	 * Getter for Client's ID
+	 * 
+	 * @return Client's ID
+	 */
 	public int getID()
 	{
 		return ID;
 	}
 
+	/**
+	 * Sets up the socket and opens connection with Server
+	 * 
+	 * @return <code>true</code> if connected correctly, <code>false</code>
+	 *         otherwise
+	 */
 	public boolean openConnection()
 	{
 		try
@@ -100,6 +157,11 @@ public class Client
 		return true;
 	}
 
+	/**
+	 * Receives packet from the Server
+	 * 
+	 * @return <code>Packet</code> obtained from the Server
+	 */
 	public Packet receive()
 	{
 		byte[] data = new byte[65536];
@@ -130,6 +192,13 @@ public class Client
 		return p;
 	}
 
+	/**
+	 * Sends <code>Packet</code> to the Server
+	 * 
+	 * @param type Type of packet
+	 * @param message Message to send
+	 * @see Packet.Type
+	 */
 	public void send(Packet.Type type, String message)
 	{
 		send = new Thread("Send")
@@ -160,9 +229,17 @@ public class Client
 			}
 		};
 		send.start();
+
 	}
 
-	// TODO
+	/**
+	 * Encrypts packet using cipher specified in <code> cipher_const</code>
+	 * 
+	 * @param p Packet to be encrypted
+	 * @return Encrypted packet as <code>SealedObject</code>
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 */
 	protected SealedObject encrypt(final Packet p) throws NoSuchAlgorithmException, NoSuchPaddingException
 	{
 		SecretKeySpec message = new SecretKeySpec(encrypt_passwd.getBytes(), cipher_const);
@@ -185,7 +262,14 @@ public class Client
 		return encrypted_message;
 	}
 
-	// TODO
+	/**
+	 * Deciphers packet using cipher specified in <code> cipher_const</code>
+	 * 
+	 * @param p <code>SealedObject</code> to be deciphered
+	 * @return deciphered <code>Packet</code>
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchPaddingException
+	 */
 	protected Packet decrypt(final SealedObject p) throws NoSuchAlgorithmException, NoSuchPaddingException
 	{
 		SecretKeySpec message = new SecretKeySpec(encrypt_passwd.getBytes(), cipher_const);
@@ -214,6 +298,10 @@ public class Client
 		return decrypted_message;
 	}
 
+	/**
+	 * Waits for packet from the Server
+	 * 
+	 */
 	public void listen()
 	{
 		listen = new Thread("Listen")
@@ -246,11 +334,20 @@ public class Client
 		listen.start();
 	}
 
+	/**
+	 * Prints to console
+	 * 
+	 * @param message message to be printed
+	 */
 	public void console(String message)
 	{
 		window_ref.console(message);
 	}
 
+	/**
+	 * Closes sockets and application
+	 * 
+	 */
 	public void close()
 	{
 		new Thread()
@@ -259,6 +356,7 @@ public class Client
 			{
 				synchronized (socket)
 				{
+					connected = false;
 					socket.close();
 					running = false;
 				}
