@@ -11,14 +11,14 @@ import java.util.List;
  */
 public class OnlineUsers
 {
-	List<String> users = new ArrayList<>();
+	public List<String> users;
 
 	public OnlineUsers()
 	{
-
+		users = new ArrayList<>();
 	}
 
-	public void update(String[] users)
+	public static void update(String[] users)
 	{
 
 	}

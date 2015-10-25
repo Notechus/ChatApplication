@@ -11,6 +11,8 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.BadPaddingException;
@@ -42,13 +44,17 @@ public class Client
 	/** Running flag */
 	private boolean running = false;
 
-	/** Client's ip converted to Inet class */
+	/** Client's IP converted to Inet class */
 	private InetAddress ip;
 	/** Client threads: sending and listening for data */
-	private Thread send, listen;
+	private Thread send, sendDirect, listen;
 	/** Reference to parent GUI window */
 	private ClientWindow window_ref;
 
+	/** Cipher object used to enc/dec */
+	private Cipher cipher;
+	/** KeyPair for enc/dec */
+	private KeyPair key;
 	/** Type of used cipher */
 	private final String cipher_const = "AES";
 	// password for encrypting packets, should be in file or sth (or key)
@@ -63,7 +69,8 @@ public class Client
 	 * change login for users from db, add registration, add new uid system,
 	 * unique id for user stored in db -> will provide friends and will help
 	 * with login stuff. Finally we might want to replace all chat with sth else
-	 * like news feed.
+	 * like news feed. Consider using bcrypt. Think about SSL or TLS. add timer
+	 * class to the server and client
 	 */
 	/**
 	 * Constructs Client with given parameters
@@ -80,6 +87,22 @@ public class Client
 		this.port = port_;
 		window_ref = parent;
 		running = true;
+
+		// RSA
+		KeyPairGenerator keyGen;
+		try
+		{
+			keyGen = KeyPairGenerator.getInstance("RSA");
+			keyGen.initialize(2048);
+			key = keyGen.generateKeyPair();
+			cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+		} catch (NoSuchAlgorithmException e)
+		{
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -199,7 +222,7 @@ public class Client
 	 * @param message Message to send
 	 * @see Packet.Type
 	 */
-	public void send(Packet.Type type, String message)
+	public void send(final Packet.Type type, final String message)
 	{
 		send = new Thread("Send")
 		{
@@ -207,9 +230,8 @@ public class Client
 			{
 				try
 				{
-					Packet p = new Packet(ID, type, message); // sends id
+					Packet p = new Packet(ID, type, message);
 					SealedObject e_packet = encrypt(p);
-					// make wrapper class for encrypted packet
 					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 					ObjectOutputStream os = new ObjectOutputStream(outputStream);
 					os.writeObject(e_packet);
@@ -229,7 +251,42 @@ public class Client
 			}
 		};
 		send.start();
+	}
 
+	/**
+	 * Sends direct message to specified client(via server)
+	 * 
+	 * @param message
+	 */
+	public void sendDirect(final String message)
+	{
+		sendDirect = new Thread("Send Direct")
+		{
+			public void run()
+			{
+				try
+				{
+					Packet p = new Packet(ID, Packet.Type.DIRECT_MESSAGE, message);
+					SealedObject e_packet = encrypt(p);
+					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+					ObjectOutputStream os = new ObjectOutputStream(outputStream);
+					os.writeObject(e_packet);
+					byte[] data = outputStream.toByteArray();
+					DatagramPacket packet = new DatagramPacket(data, data.length, ip, port);
+					socket.send(packet);
+				} catch (IOException ex)
+				{
+					ex.printStackTrace();
+				} catch (NoSuchAlgorithmException e)
+				{
+					e.printStackTrace();
+				} catch (NoSuchPaddingException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		};
+		sendDirect.start();
 	}
 
 	/**
@@ -248,7 +305,9 @@ public class Client
 		try
 		{
 			c.init(Cipher.ENCRYPT_MODE, message);
+			// cipher.init(Cipher.ENCRYPT_MODE, key.getPublic());
 			encrypted_message = new SealedObject(p, c);
+			// encrypted_message = new SealedObject(p, cipher);
 		} catch (InvalidKeyException e)
 		{
 			e.printStackTrace();
@@ -278,6 +337,7 @@ public class Client
 		try
 		{
 			c.init(Cipher.DECRYPT_MODE, message);
+			// cipher.init(Cipher.DECRYPT_MODE, key.getPrivate());
 			decrypted_message = (Packet) p.getObject(c);
 		} catch (InvalidKeyException e)
 		{
@@ -326,7 +386,9 @@ public class Client
 					{
 						console("You have timed out");
 						connected = false;
-
+					} else if (packet.type == Packet.Type.DIRECT_MESSAGE)
+					{
+						console(packet.message); // temporary
 					}
 				}
 			}
