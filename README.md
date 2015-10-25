@@ -8,3 +8,8 @@ TODO:
   * improve gui
   * change login system
   * add registration
+
+
+Last changes:
+  Added some sort of encryption for packets so they cannot be sniffed.
+  Added javadoc comment.
