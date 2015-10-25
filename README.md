@@ -12,4 +12,4 @@ TODO:
 
 Last changes:
   Added some sort of encryption for packets so they cannot be sniffed.
-  Added javadoc comment.
+  Added javadoc comment. 
