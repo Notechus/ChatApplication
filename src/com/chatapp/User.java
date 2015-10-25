@@ -2,6 +2,12 @@ package com.chatapp;
 
 import java.net.InetAddress;
 
+/**
+ * User class
+ * 
+ * @author notechus
+ *
+ */
 public class User
 {
 	private String name, address;

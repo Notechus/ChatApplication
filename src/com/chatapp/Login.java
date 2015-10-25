@@ -12,9 +12,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.SwingConstants;
 
+/**
+ * Login window class
+ * 
+ * @author notechus
+ *
+ */
 public class Login extends JFrame
 {
+	/** Default UID because this class is serializable */
 	private static final long serialVersionUID = 1L;
+	/** GUI stuff */
 	private JPanel contentPane;
 	private JTextField txtName;
 	private JTextField txtIP;
@@ -96,7 +104,7 @@ public class Login extends JFrame
 	}
 
 	/**
-	 * Login stuff here
+	 * Login happens here
 	 */
 	private void login(String name, String address, int port)
 	{
@@ -104,6 +112,11 @@ public class Login extends JFrame
 		new ClientWindow(name, address, port);
 	}
 
+	/**
+	 * Main function of application
+	 * 
+	 * @param args no use of arguments here
+	 */
 	public static void main(String[] args)
 	{
 		EventQueue.invokeLater(new Runnable()

@@ -17,7 +17,7 @@ import javax.crypto.spec.SecretKeySpec;
  * @author notechus
  * 
  */
-// TODO check DTLS
+// TODO not sure if will use it
 public class EPacket extends Packet
 {
 	private static final long serialVersionUID = 7L;

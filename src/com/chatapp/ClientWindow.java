@@ -30,12 +30,22 @@ import javax.swing.JMenuItem;
 import javax.swing.JList;
 import javax.swing.JLabel;
 
+/**
+ * Client window class
+ * 
+ * @author notechus
+ *
+ */
 public class ClientWindow extends JFrame implements Runnable
 {
+	/** Default UID because this class is serializable */
 	private static final long serialVersionUID = 1L;
+	/** UDP client reference */
 	private Client client;
+	/** GUI running thread */
 	private Thread run;
 
+	/** GUI stuff */
 	private JPanel contentPane;
 	private JTextField txtMessage;
 	private JTextArea txtrHistory;
@@ -72,11 +82,20 @@ public class ClientWindow extends JFrame implements Runnable
 
 	}
 
+	/**
+	 * Opens connection socket
+	 * 
+	 * @return true if opened succesfully, false otherwise
+	 */
 	private boolean openConnection()
 	{
 		return client.openConnection();
 	}
 
+	/**
+	 * Creates application window
+	 * 
+	 */
 	private void createWindow()
 	{
 		try
@@ -97,11 +116,7 @@ public class ClientWindow extends JFrame implements Runnable
 			public void windowClosing(WindowEvent e)
 			{
 				String disconnect = "" + client.getID();
-				send(Packet.Type.DISCONNECT, disconnect); // method in client
-															// window
-															// redirecting to
-															// client ->
-															// separating code
+				send(Packet.Type.DISCONNECT, disconnect);
 				client.close();
 			}
 		});
@@ -141,8 +156,6 @@ public class ClientWindow extends JFrame implements Runnable
 		{ 28, 655, 180, 7 }; // sum 880
 		gbl_contentPane.rowHeights = new int[]
 		{ 25, 485, 40 }; // sum 550
-		// gbl_contentPane.columnWeights = new double[] { 1.0, 1.0 };
-		// gbl_contentPane.rowWeights = new double[] { 1.0, Double.MIN_VALUE };
 		contentPane.setLayout(gbl_contentPane);
 
 		txtrHistory = new JTextArea();
@@ -232,11 +245,22 @@ public class ClientWindow extends JFrame implements Runnable
 		txtMessage.requestFocusInWindow();
 	}
 
+	/**
+	 * Listening in here
+	 * 
+	 * @see ClientWindow#listen()
+	 */
 	public void run()
 	{
 		listen();
 	}
 
+	/**
+	 * Sends packet to the server
+	 * 
+	 * @param type packet type
+	 * @param message message to be sent
+	 */
 	public void send(Packet.Type type, String message)
 	{
 		if (!message.equals(""))
@@ -246,11 +270,19 @@ public class ClientWindow extends JFrame implements Runnable
 		}
 	}
 
+	/**
+	 * Listens for packets from server
+	 */
 	public void listen()
 	{
 		client.listen();
 	}
 
+	/**
+	 * Prints to console
+	 * 
+	 * @param message message to be printed
+	 */
 	public void console(String message)
 	{
 		txtrHistory.append(message + "\n\r");
