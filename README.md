@@ -10,6 +10,6 @@ TODO:
   * add registration
 
 
-Last changes:<br><br>
+Last changes:<br>
   Added some sort of encryption for packets so they cannot be sniffed.<br>
   Added javadoc comment. <br>
