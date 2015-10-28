@@ -66,9 +66,32 @@ public class ClientWindow extends JFrame implements Runnable
 	 */
 	public ClientWindow(String name_, String address_, int port_)
 	{
-
 		setTitle("Chat Application: " + name_);
 		client = new Client(this, name_, address_, port_);
+		boolean connect = openConnection();
+		if (!connect)
+		{
+			System.err.println("Connection failed");
+			console("Connection failed");
+		}
+		createWindow();
+		console("Attempting to connect as: " + name_);
+		send(Packet.Type.CONNECT, name_);
+		run = new Thread(this, "Running");
+		run.start();
+	}
+
+	public ClientWindow(String name_, char[] passwd, int port_)
+	{
+		setTitle("Chat Application: " + name_);
+		String ID = "";
+		// should validate in server before connection and pass id here
+		client = new Client(this, name_, ID);
+
+		for (char i : passwd)
+		{
+			i = 0; // zeroes password out int memory
+		}
 		boolean connect = openConnection();
 		if (!connect)
 		{

@@ -109,6 +109,21 @@ public class Client
 	}
 
 	/**
+	 * Will be used when user validation will be added
+	 * 
+	 * @param parent reference to gui window
+	 * @param name_ user name
+	 * @param ID user id received from server
+	 */
+	public Client(ClientWindow parent, String name_, String ID)
+	{
+		window_ref = parent;
+		this.name = name_;
+		this.ID = Integer.parseInt(ID);
+		// do the rest here
+	}
+
+	/**
 	 * Getter for name
 	 * 
 	 * @return Client's name

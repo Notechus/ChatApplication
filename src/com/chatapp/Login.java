@@ -1,16 +1,30 @@
 package com.chatapp;
 
 import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import javax.swing.SwingConstants;
+
+import com.chatapp.networking.Packet;
 
 /**
  * Login window class
@@ -25,10 +39,10 @@ public class Login extends JFrame
 	/** GUI stuff */
 	private JPanel contentPane;
 	private JTextField txtName;
-	private JTextField txtIP;
-	private JLabel lblIpAdress;
-	private JTextField txtPort;
-	private JLabel lblPort;
+	private JLabel lblPassword;
+	private JPasswordField pwdPassword;
+
+	private InetAddress ip;
 
 	/**
 	 * Create the frame.
@@ -63,28 +77,9 @@ public class Login extends JFrame
 		lblName.setBounds(118, 45, 46, 14);
 		contentPane.add(lblName);
 
-		txtIP = new JTextField();
-		txtIP.setHorizontalAlignment(SwingConstants.CENTER);
-		txtIP.setText("localhost");
-		txtIP.setBounds(82, 121, 130, 25);
-		contentPane.add(txtIP);
-		txtIP.setColumns(10);
-
-		lblIpAdress = new JLabel("IP Adress:");
-		lblIpAdress.setBounds(118, 103, 118, 14);
-		contentPane.add(lblIpAdress);
-
-		txtPort = new JTextField();
-		// txtPort.setFont(new Font("Monospaced", Font.PLAIN, 19));
-		txtPort.setHorizontalAlignment(SwingConstants.CENTER);
-		txtPort.setText("8192");
-		txtPort.setColumns(10);
-		txtPort.setBounds(82, 173, 130, 25);
-		contentPane.add(txtPort);
-
-		lblPort = new JLabel("Port:");
-		lblPort.setBounds(118, 152, 35, 14);
-		contentPane.add(lblPort);
+		lblPassword = new JLabel("Password:");
+		lblPassword.setBounds(118, 103, 89, 14);
+		contentPane.add(lblPassword);
 
 		JButton btnLogin = new JButton("Login");
 		btnLogin.addActionListener(new ActionListener()
@@ -92,15 +87,62 @@ public class Login extends JFrame
 			public void actionPerformed(ActionEvent e)
 			{
 				String name = txtName.getText();
-				String address = txtIP.getText();
-				int port = Integer.parseInt(txtPort.getText());
-				// we can try to validate here
-
-				login(name, address, port);
+				String address = "localhost";
+				char[] passwd = pwdPassword.getPassword();
+				boolean validated = false;
+				int port = 8192;
+				try
+				{
+					ip = InetAddress.getByName("localhost");
+					// this is so bad...we dont have encryption here yet
+					DatagramSocket socket = new DatagramSocket();
+					Packet p = new Packet(0, Packet.Type.LOGIN, name + "|" + passwd.toString());
+					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+					ObjectOutputStream os = new ObjectOutputStream(outputStream);
+					os.writeObject(p);
+					byte[] data = outputStream.toByteArray();
+					DatagramPacket packet = new DatagramPacket(data, data.length, ip, port);
+					socket.send(packet);
+					Thread.sleep(1000);
+					byte[] response = new byte[1024];
+					// byte[] decrypted_packet = null;
+					DatagramPacket resp = new DatagramPacket(response, response.length);
+					socket.receive(resp);
+					ByteArrayInputStream in = new ByteArrayInputStream(response);
+					ObjectInputStream is = new ObjectInputStream(in);
+					p = (Packet) is.readObject();
+					if (p.message == "true")
+					{
+						validated = true;
+					}
+				} catch (SocketException ex)
+				{
+					ex.printStackTrace();
+				} catch (UnknownHostException e1)
+				{
+					e1.printStackTrace();
+				} catch (ClassNotFoundException e1)
+				{
+					e1.printStackTrace();
+				} catch (IOException e1)
+				{
+					e1.printStackTrace();
+				} catch (InterruptedException e1)
+				{
+					e1.printStackTrace();
+				}
+				if (validated)
+				{
+					login(name, address, port);
+				}
 			}
 		});
 		btnLogin.setBounds(102, 246, 89, 23);
 		contentPane.add(btnLogin);
+
+		pwdPassword = new JPasswordField();
+		pwdPassword.setBounds(82, 124, 130, 25);
+		contentPane.add(pwdPassword);
 	}
 
 	/**
@@ -110,6 +152,10 @@ public class Login extends JFrame
 	{
 		dispose();
 		new ClientWindow(name, address, port);
+		// new ClientWindow(name, passwd, port);
+		/*
+		 * for (char i : passwd) { i = 0; // zeroes password in memory }
+		 */
 	}
 
 	/**
