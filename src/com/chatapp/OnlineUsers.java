@@ -11,14 +11,24 @@ import java.util.List;
  */
 public class OnlineUsers
 {
-	public List<String> users;
+	public List<User> users;
 
 	public OnlineUsers()
 	{
 		users = new ArrayList<>();
 	}
 
-	public static void update(String[] users)
+	public void add(User user)
+	{
+		users.add(user);
+	}
+
+	public void remove(User user)
+	{
+		users.remove(user);
+	}
+
+	public static void update()
 	{
 
 	}

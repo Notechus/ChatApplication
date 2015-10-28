@@ -1,7 +1,5 @@
 package com.chatapp;
 
-import java.net.InetAddress;
-
 /**
  * User class
  * 
@@ -18,10 +16,15 @@ public class User
 	// public boolean connected = false; usable later
 	// private InetAddress ip; i probably dont need it here
 
-	public User(String name_, String address_, int ID_)
+	public User(String name_, int ID_)
 	{
 		this.name = name_;
-		this.address = address_;
+		// this.address = address_;
 		this.ID = ID_;
+	}
+
+	public String toString()
+	{
+		return name;
 	}
 }

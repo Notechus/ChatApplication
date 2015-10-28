@@ -12,8 +12,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -23,12 +29,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.text.DefaultCaret;
 
 import com.chatapp.networking.Packet;
-
-import javax.swing.JMenuBar;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JList;
-import javax.swing.JLabel;
 
 /**
  * Client window class
@@ -55,8 +55,9 @@ public class ClientWindow extends JFrame implements Runnable
 	private JMenuItem mntmOnlineUsers;
 	private JMenuItem mntmExit;
 	private JMenu mnHelp;
-	private JList<String> list;
+	private JList<User> list;
 	private JLabel lblOnline;
+	private DefaultListModel<User> listModel;
 
 	// can use UUID class for ID or write own
 
@@ -229,7 +230,8 @@ public class ClientWindow extends JFrame implements Runnable
 		gbc_btnSend.weighty = 0;
 		contentPane.add(btnSend, gbc_btnSend);
 
-		list = new JList<>();
+		listModel = new DefaultListModel();
+		list = new JList<>(listModel);
 		GridBagConstraints gbc_list = new GridBagConstraints();
 		gbc_list.insets = new Insets(0, 15, 5, 5);
 		gbc_list.fill = GridBagConstraints.BOTH;
@@ -237,12 +239,18 @@ public class ClientWindow extends JFrame implements Runnable
 		gbc_list.gridy = 1;
 		contentPane.add(list, gbc_list);
 
-		String[] listd =
-		{ "Ja", "Ty", "On", "Ona", "Nikt" };
-		list.setListData(listd);
+		// list.setListData(userArray);
 
 		setVisible(true);
 		txtMessage.requestFocusInWindow();
+	}
+
+	/**
+	 * Getter for client
+	 */
+	public Client getClient()
+	{
+		return client;
 	}
 
 	/**
@@ -268,6 +276,16 @@ public class ClientWindow extends JFrame implements Runnable
 			client.send(type, message);
 			txtMessage.setText("");
 		}
+	}
+
+	public void addUser(User user)
+	{
+		listModel.addElement(user);
+	}
+
+	public void removeUser(User user)
+	{
+		listModel.removeElement(user);
 	}
 
 	/**

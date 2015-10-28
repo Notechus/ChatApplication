@@ -51,6 +51,8 @@ public class Client
 	/** Reference to parent GUI window */
 	private ClientWindow window_ref;
 
+	public OnlineUsers users;
+
 	/** Cipher object used to enc/dec */
 	private Cipher cipher;
 	/** KeyPair for enc/dec */
@@ -86,6 +88,7 @@ public class Client
 		this.address = address_;
 		this.port = port_;
 		window_ref = parent;
+		users = new OnlineUsers();
 		running = true;
 
 		// RSA
@@ -389,6 +392,18 @@ public class Client
 					} else if (packet.type == Packet.Type.DIRECT_MESSAGE)
 					{
 						console(packet.message); // temporary
+					} else if (packet.type == Packet.Type.USER_ONLINE)
+					{
+						console("User " + packet.message + " just came online!");
+						String name[] = packet.message.split("\\.");
+						users.add(new User(name[1].trim(), Integer.parseInt(name[0].trim())));
+						window_ref.addUser(new User(name[1].trim(), Integer.parseInt(name[0].trim())));
+					} else if (packet.type == Packet.Type.USER_OFFLINE)
+					{
+						console("User " + packet.message + " disconnected!");
+						String name[] = packet.message.split("\\.");
+						users.remove(new User(name[1].trim(), Integer.parseInt(name[0].trim())));
+						window_ref.removeUser(new User(name[1].trim(), Integer.parseInt(name[0].trim())));
 					}
 				}
 			}
