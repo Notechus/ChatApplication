@@ -18,8 +18,8 @@ import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SealedObject;
 
-import com.chatapp.networking.CipherSystem;
 import com.chatapp.networking.Packet;
+import com.chatapp.security.CipherSystem;
 
 /**
  * Chat Client class responsible for client side of chat connection
@@ -50,12 +50,6 @@ public class Client
 
 	public OnlineUsers users;
 
-	/** Cipher object used to enc/dec */
-	private Cipher cipher;
-	/** KeyPair for enc/dec */
-	private KeyPair key;
-	/** Type of used cipher */
-
 	/*
 	 * TODO: add encrypting to packets(almost done), add user-user
 	 * communication(necessary to add new packet type for this), add
@@ -83,22 +77,6 @@ public class Client
 		window_ref = parent;
 		users = new OnlineUsers();
 		running = true;
-
-		// RSA
-		KeyPairGenerator keyGen;
-		try
-		{
-			keyGen = KeyPairGenerator.getInstance("RSA");
-			keyGen.initialize(2048);
-			key = keyGen.generateKeyPair();
-			cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-		} catch (NoSuchAlgorithmException e)
-		{
-			e.printStackTrace();
-		} catch (NoSuchPaddingException e)
-		{
-			e.printStackTrace();
-		}
 	}
 
 	/**

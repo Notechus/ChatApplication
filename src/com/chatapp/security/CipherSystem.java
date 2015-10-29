@@ -1,7 +1,9 @@
-package com.chatapp.networking;
+package com.chatapp.security;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.BadPaddingException;
@@ -11,13 +13,40 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SealedObject;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.chatapp.networking.Packet;
+
 public class CipherSystem
 {
+
+	/** Cipher object used to enc/dec */
+	private static Cipher cipher;
+	/** KeyPair for enc/dec */
+	private static KeyPair key;
+
 	/** Type of used cipher */
 	private static final String cipher_type = "AES";
 	// password for encrypting packets, should be in file or sth (or key)
 	/** Password for encryption and decryption */
 	private static final String encrypt_passwd = "Somerandompasswd"; // 16
+
+	static
+	{
+		// RSA
+		KeyPairGenerator keyGen;
+		try
+		{
+			keyGen = KeyPairGenerator.getInstance("RSA");
+			keyGen.initialize(2048);
+			key = keyGen.generateKeyPair();
+			cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+		} catch (NoSuchAlgorithmException e)
+		{
+			e.printStackTrace();
+		} catch (NoSuchPaddingException e)
+		{
+			e.printStackTrace();
+		}
+	}
 
 	/**
 	 * Encrypts packet using cipher specified in <code> cipher_const</code>

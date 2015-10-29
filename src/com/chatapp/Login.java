@@ -27,8 +27,8 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
-import com.chatapp.networking.CipherSystem;
 import com.chatapp.networking.Packet;
+import com.chatapp.security.CipherSystem;
 
 /**
  * Login window class
