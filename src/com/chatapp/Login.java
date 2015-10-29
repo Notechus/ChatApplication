@@ -13,7 +13,10 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.security.NoSuchAlgorithmException;
 
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SealedObject;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -24,6 +27,7 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
+import com.chatapp.networking.CipherSystem;
 import com.chatapp.networking.Packet;
 
 /**
@@ -43,6 +47,10 @@ public class Login extends JFrame
 	private JPasswordField pwdPassword;
 
 	private InetAddress ip;
+
+	private final String address = "localhost";
+	private final int port = 8192;
+	private String username;
 
 	/**
 	 * Create the frame.
@@ -86,54 +94,14 @@ public class Login extends JFrame
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				String name = txtName.getText();
-				String address = "localhost";
-				char[] passwd = pwdPassword.getPassword();
-				boolean validated = false;
-				int port = 8192;
-				try
-				{
-					ip = InetAddress.getByName("localhost");
-					// this is so bad...we dont have encryption here yet
-					DatagramSocket socket = new DatagramSocket();
-					Packet p = new Packet(0, Packet.Type.LOGIN, name + "|" + passwd.toString());
-					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-					ObjectOutputStream os = new ObjectOutputStream(outputStream);
-					os.writeObject(p);
-					byte[] data = outputStream.toByteArray();
-					DatagramPacket packet = new DatagramPacket(data, data.length, ip, port);
-					socket.send(packet);
-					Thread.sleep(1000);
-					byte[] response = new byte[1024];
-					// byte[] decrypted_packet = null;
-					DatagramPacket resp = new DatagramPacket(response, response.length);
-					socket.receive(resp);
-					ByteArrayInputStream in = new ByteArrayInputStream(response);
-					ObjectInputStream is = new ObjectInputStream(in);
-					p = (Packet) is.readObject();
-					if (p.message == "true")
-					{
-						validated = true;
-					}
-				} catch (SocketException ex)
-				{
-					ex.printStackTrace();
-				} catch (UnknownHostException e1)
-				{
-					e1.printStackTrace();
-				} catch (ClassNotFoundException e1)
-				{
-					e1.printStackTrace();
-				} catch (IOException e1)
-				{
-					e1.printStackTrace();
-				} catch (InterruptedException e1)
-				{
-					e1.printStackTrace();
-				}
+				username = txtName.getText();
+				boolean validated = validateUser();
 				if (validated)
 				{
-					login(name, address, port);
+					login(username, address, port);
+				} else
+				{
+
 				}
 			}
 		});
@@ -156,6 +124,61 @@ public class Login extends JFrame
 		/*
 		 * for (char i : passwd) { i = 0; // zeroes password in memory }
 		 */
+	}
+
+	private boolean validateUser()
+	{
+		boolean validated = false;
+		char[] passwd = pwdPassword.getPassword();
+		try
+		{
+			ip = InetAddress.getByName("localhost");
+			DatagramSocket socket = new DatagramSocket();
+			Packet p = new Packet(0, Packet.Type.LOGIN, username + "|" + passwd.toString());
+			SealedObject e_packet = CipherSystem.encrypt(p);
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			ObjectOutputStream os = new ObjectOutputStream(outputStream);
+			os.writeObject(e_packet);
+			byte[] data = outputStream.toByteArray();
+			DatagramPacket packet = new DatagramPacket(data, data.length, ip, port);
+			socket.send(packet);
+			Thread.sleep(1000);
+			byte[] response = new byte[1024];
+			// byte[] decrypted_packet = null;
+			DatagramPacket resp = new DatagramPacket(response, response.length);
+			socket.receive(resp);
+			ByteArrayInputStream in = new ByteArrayInputStream(response);
+			ObjectInputStream is = new ObjectInputStream(in);
+			e_packet = (SealedObject) is.readObject();
+			p = CipherSystem.decrypt(e_packet);
+			if (p.message == "true")
+			{
+				validated = true;
+			}
+			socket.close();
+		} catch (SocketException ex)
+		{
+			ex.printStackTrace();
+		} catch (UnknownHostException ex)
+		{
+			ex.printStackTrace();
+		} catch (ClassNotFoundException ex)
+		{
+			ex.printStackTrace();
+		} catch (IOException ex)
+		{
+			ex.printStackTrace();
+		} catch (InterruptedException ex)
+		{
+			ex.printStackTrace();
+		} catch (NoSuchAlgorithmException ex)
+		{
+			ex.printStackTrace();
+		} catch (NoSuchPaddingException ex)
+		{
+			ex.printStackTrace();
+		}
+		return validated;
 	}
 
 	/**
