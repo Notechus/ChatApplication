@@ -3,20 +3,10 @@ package com.chatapp;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.security.NoSuchAlgorithmException;
 
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SealedObject;
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -27,8 +17,7 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
-import com.chatapp.networking.Packet;
-import com.chatapp.security.CipherSystem;
+import com.chatapp.security.authentication.UserAuthentication;
 
 /**
  * Login window class
@@ -51,6 +40,8 @@ public class Login extends JFrame
 	private final String address = "localhost";
 	private final int port = 8192;
 	private String username;
+
+	private LoginContext lc;
 
 	/**
 	 * Create the frame.
@@ -95,10 +86,19 @@ public class Login extends JFrame
 			public void actionPerformed(ActionEvent e)
 			{
 				username = txtName.getText();
-				boolean validated = validateUser();
+				boolean validated = false;
+				try
+				{
+					validated = authenticate();
+					UserAuthentication au = new UserAuthentication(username, pwdPassword.getPassword());
+				} catch (LoginException ex)
+				{
+					ex.printStackTrace();
+				}
 				if (validated)
 				{
 					login(username, address, port);
+					System.out.println("Logged in");
 				} else
 				{
 
@@ -126,65 +126,19 @@ public class Login extends JFrame
 		 */
 	}
 
-	private boolean validateUser()
+	private boolean authenticate() throws LoginException
 	{
 		boolean validated = false;
 		char[] passwd = pwdPassword.getPassword();
-		try
-		{
-			ip = InetAddress.getByName("localhost");
-			DatagramSocket socket = new DatagramSocket();
-			Packet p = new Packet(0, Packet.Type.LOGIN, username + "|" + passwd.toString());
-			SealedObject e_packet = CipherSystem.encrypt(p);
-			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			ObjectOutputStream os = new ObjectOutputStream(outputStream);
-			os.writeObject(e_packet);
-			byte[] data = outputStream.toByteArray();
-			DatagramPacket packet = new DatagramPacket(data, data.length, ip, port);
-			socket.send(packet);
-			Thread.sleep(1000);
-			byte[] response = new byte[1024];
-			// byte[] decrypted_packet = null;
-			DatagramPacket resp = new DatagramPacket(response, response.length);
-			socket.receive(resp);
-			ByteArrayInputStream in = new ByteArrayInputStream(response);
-			ObjectInputStream is = new ObjectInputStream(in);
-			e_packet = (SealedObject) is.readObject();
-			p = CipherSystem.decrypt(e_packet);
-			if (p.message == "true")
-			{
-				validated = true;
-			}
-			socket.close();
-		} catch (SocketException ex)
-		{
-			ex.printStackTrace();
-		} catch (UnknownHostException ex)
-		{
-			ex.printStackTrace();
-		} catch (ClassNotFoundException ex)
-		{
-			ex.printStackTrace();
-		} catch (IOException ex)
-		{
-			ex.printStackTrace();
-		} catch (InterruptedException ex)
-		{
-			ex.printStackTrace();
-		} catch (NoSuchAlgorithmException ex)
-		{
-			ex.printStackTrace();
-		} catch (NoSuchPaddingException ex)
-		{
-			ex.printStackTrace();
-		}
+
 		return validated;
 	}
 
 	/**
 	 * Main function of application
 	 * 
-	 * @param args no use of arguments here
+	 * @param args
+	 *            no use of arguments here
 	 */
 	public static void main(String[] args)
 	{

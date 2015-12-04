@@ -51,23 +51,19 @@ public class Client
 	public OnlineUsers users;
 
 	/*
-	 * TODO: add encrypting to packets(almost done), add user-user
-	 * communication(necessary to add new packet type for this), add
-	 * acknowledgement packet, get separate udp for ping and dc, add logging
-	 * system, add exceptions management improve gui, add sounds, add database,
-	 * change login for users from db, add registration, add new uid system,
-	 * unique id for user stored in db -> will provide friends and will help
-	 * with login stuff. Finally we might want to replace all chat with sth else
-	 * like news feed. Consider using bcrypt. Think about SSL or TLS. add timer
-	 * class to the server and client
+	 * TODO: add encrypting to packets(almost done), add user-user communication(necessary to add new packet type for this), add acknowledgement packet, get separate udp for ping and dc, add logging system, add exceptions management improve gui, add sounds, add database, change login for users from db, add registration, add new uid system, unique id for user stored in db -> will provide friends and will help with login stuff. Finally we might want to replace all chat with sth else like news feed. Consider using bcrypt. Think about SSL or TLS. add timer class to the server and client
 	 */
 	/**
 	 * Constructs Client with given parameters
 	 * 
-	 * @param parent reference to parent GUI
-	 * @param name_ Client's name
-	 * @param address_ Client's IP address
-	 * @param port_ Client's port
+	 * @param parent
+	 *            reference to parent GUI
+	 * @param name_
+	 *            Client's name
+	 * @param address_
+	 *            Client's IP address
+	 * @param port_
+	 *            Client's port
 	 */
 	public Client(ClientWindow parent, String name_, String address_, int port_)
 	{
@@ -82,9 +78,12 @@ public class Client
 	/**
 	 * Will be used when user validation will be added
 	 * 
-	 * @param parent reference to gui window
-	 * @param name_ user name
-	 * @param ID user id received from server
+	 * @param parent
+	 *            reference to gui window
+	 * @param name_
+	 *            user name
+	 * @param ID
+	 *            user id received from server
 	 */
 	public Client(ClientWindow parent, String name_, String ID)
 	{
@@ -125,10 +124,10 @@ public class Client
 	}
 
 	/**
-	 * Setter for Client's ID. Should be invisible outside class, because only
-	 * Server can assign ID
+	 * Setter for Client's ID. Should be invisible outside class, because only Server can assign ID
 	 * 
-	 * @param id Id which will be assigned to user
+	 * @param id
+	 *            Id which will be assigned to user
 	 */
 	private void setID(int id)
 	{
@@ -148,8 +147,7 @@ public class Client
 	/**
 	 * Sets up the socket and opens connection with Server
 	 * 
-	 * @return <code>true</code> if connected correctly, <code>false</code>
-	 *         otherwise
+	 * @return <code>true</code> if connected correctly, <code>false</code> otherwise
 	 */
 	public boolean openConnection()
 	{
@@ -207,8 +205,10 @@ public class Client
 	/**
 	 * Sends <code>Packet</code> to the Server
 	 * 
-	 * @param type Type of packet
-	 * @param message Message to send
+	 * @param type
+	 *            Type of packet
+	 * @param message
+	 *            Message to send
 	 * @see Packet.Type
 	 */
 	public void send(final Packet.Type type, final String message)
@@ -331,7 +331,8 @@ public class Client
 	/**
 	 * Prints to console
 	 * 
-	 * @param message message to be printed
+	 * @param message
+	 *            message to be printed
 	 */
 	public void console(String message)
 	{

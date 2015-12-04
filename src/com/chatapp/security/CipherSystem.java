@@ -51,7 +51,8 @@ public class CipherSystem
 	/**
 	 * Encrypts packet using cipher specified in <code> cipher_const</code>
 	 * 
-	 * @param p Packet to be encrypted
+	 * @param p
+	 *            Packet to be encrypted
 	 * @return Encrypted packet as <code>SealedObject</code>
 	 * @throws NoSuchAlgorithmException
 	 * @throws NoSuchPaddingException
@@ -83,7 +84,8 @@ public class CipherSystem
 	/**
 	 * Deciphers packet using cipher specified in <code> cipher_const</code>
 	 * 
-	 * @param p <code>SealedObject</code> to be deciphered
+	 * @param p
+	 *            <code>SealedObject</code> to be deciphered
 	 * @return deciphered <code>Packet</code>
 	 * @throws NoSuchAlgorithmException
 	 * @throws NoSuchPaddingException
