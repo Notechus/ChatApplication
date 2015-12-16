@@ -56,14 +56,10 @@ public class Client
 	/**
 	 * Constructs Client with given parameters
 	 * 
-	 * @param parent
-	 *            reference to parent GUI
-	 * @param name_
-	 *            Client's name
-	 * @param address_
-	 *            Client's IP address
-	 * @param port_
-	 *            Client's port
+	 * @param parent reference to parent GUI
+	 * @param name_ Client's name
+	 * @param address_ Client's IP address
+	 * @param port_ Client's port
 	 */
 	public Client(ClientWindow parent, String name_, String address_, int port_)
 	{
@@ -78,12 +74,9 @@ public class Client
 	/**
 	 * Will be used when user validation will be added
 	 * 
-	 * @param parent
-	 *            reference to gui window
-	 * @param name_
-	 *            user name
-	 * @param ID
-	 *            user id received from server
+	 * @param parent reference to gui window
+	 * @param name_ user name
+	 * @param ID user id received from server
 	 */
 	public Client(ClientWindow parent, String name_, String ID)
 	{
@@ -126,8 +119,7 @@ public class Client
 	/**
 	 * Setter for Client's ID. Should be invisible outside class, because only Server can assign ID
 	 * 
-	 * @param id
-	 *            Id which will be assigned to user
+	 * @param id Id which will be assigned to user
 	 */
 	private void setID(int id)
 	{
@@ -205,10 +197,8 @@ public class Client
 	/**
 	 * Sends <code>Packet</code> to the Server
 	 * 
-	 * @param type
-	 *            Type of packet
-	 * @param message
-	 *            Message to send
+	 * @param type Type of packet
+	 * @param message Message to send
 	 * @see Packet.Type
 	 */
 	public void send(final Packet.Type type, final String message)
@@ -331,8 +321,7 @@ public class Client
 	/**
 	 * Prints to console
 	 * 
-	 * @param message
-	 *            message to be printed
+	 * @param message message to be printed
 	 */
 	public void console(String message)
 	{

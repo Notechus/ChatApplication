@@ -25,7 +25,7 @@ import com.chatapp.security.authentication.UserAuthentication;
  * @author notechus
  *
  */
-public class Login extends JFrame
+public class Login extends JFrame implements GUIWindow
 {
 	/** Default UID because this class is serializable */
 	private static final long serialVersionUID = 1L;
@@ -90,7 +90,6 @@ public class Login extends JFrame
 				try
 				{
 					validated = authenticate();
-					UserAuthentication au = new UserAuthentication(username, pwdPassword.getPassword());
 				} catch (LoginException ex)
 				{
 					ex.printStackTrace();
@@ -137,8 +136,7 @@ public class Login extends JFrame
 	/**
 	 * Main function of application
 	 * 
-	 * @param args
-	 *            no use of arguments here
+	 * @param args no use of arguments here
 	 */
 	public static void main(String[] args)
 	{
@@ -156,5 +154,23 @@ public class Login extends JFrame
 				}
 			}
 		});
+	}
+
+	@Override
+	public void removeUser(User user)
+	{
+		// should do nothing here
+	}
+
+	@Override
+	public void addUser(User user)
+	{
+		// should do nothing here
+	}
+
+	@Override
+	public void console(String message)
+	{
+		// should do nothing here
 	}
 }

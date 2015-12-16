@@ -36,7 +36,7 @@ import com.chatapp.networking.Packet;
  * @author notechus
  *
  */
-public class ClientWindow extends JFrame implements Runnable
+public class ClientWindow extends JFrame implements Runnable, GUIWindow
 {
 	/** Default UID because this class is serializable */
 	private static final long serialVersionUID = 1L;
@@ -172,14 +172,10 @@ public class ClientWindow extends JFrame implements Runnable
 		setContentPane(contentPane);
 
 		GridBagLayout gbl_contentPane = new GridBagLayout();
-		gbl_contentPane.rowWeights = new double[]
-		{ 0.0, 1.0, 0.0 };
-		gbl_contentPane.columnWeights = new double[]
-		{ 0.0, 0.0, 1.0, 0.0 };
-		gbl_contentPane.columnWidths = new int[]
-		{ 28, 655, 180, 7 }; // sum 880
-		gbl_contentPane.rowHeights = new int[]
-		{ 25, 485, 40 }; // sum 550
+		gbl_contentPane.rowWeights = new double[] { 0.0, 1.0, 0.0 };
+		gbl_contentPane.columnWeights = new double[] { 0.0, 0.0, 1.0, 0.0 };
+		gbl_contentPane.columnWidths = new int[] { 28, 655, 180, 7 }; // sum 880
+		gbl_contentPane.rowHeights = new int[] { 25, 485, 40 }; // sum 550
 		contentPane.setLayout(gbl_contentPane);
 
 		txtrHistory = new JTextArea();
