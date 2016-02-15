@@ -4,20 +4,20 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
-import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
-import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
-import com.chatapp.security.authentication.UserAuthentication;
+import com.chatapp.networking.UDPSocket;
 
 /**
  * Login window class
@@ -36,12 +36,14 @@ public class Login extends JFrame implements GUIWindow
 	private JPasswordField pwdPassword;
 
 	private InetAddress ip;
+	private UDPSocket socket;
 
+	// private final String address = "localhost";
 	private final String address = "localhost";
 	private final int port = 8192;
 	private String username;
 
-	private LoginContext lc;
+	private boolean connected = false;
 
 	/**
 	 * Create the frame.
@@ -56,6 +58,17 @@ public class Login extends JFrame implements GUIWindow
 			ex.printStackTrace();
 		}
 
+		try
+		{
+			socket = new UDPSocket(this, -1, address, port);
+			connected = socket.openConnection();
+		} catch (UnknownHostException ex)
+		{
+			ex.printStackTrace();
+		}
+		// illegal argument ex tylko tymczasowo-coś trzeba było dać
+		if (!connected) throw new IllegalArgumentException("Socket not connected");
+
 		setResizable(false);
 		setTitle("Login");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -67,7 +80,6 @@ public class Login extends JFrame implements GUIWindow
 		contentPane.setLayout(null);
 
 		txtName = new JTextField();
-		txtName.setHorizontalAlignment(SwingConstants.CENTER);
 		txtName.setBounds(82, 65, 130, 25);
 		contentPane.add(txtName);
 		txtName.setColumns(10);
@@ -100,7 +112,7 @@ public class Login extends JFrame implements GUIWindow
 					System.out.println("Logged in");
 				} else
 				{
-
+					JOptionPane.showMessageDialog(Login.this, "Incorrect username or password.");
 				}
 			}
 		});
@@ -118,16 +130,12 @@ public class Login extends JFrame implements GUIWindow
 	private void login(String name, String address, int port)
 	{
 		dispose();
-		new ClientWindow(name, address, port);
-		// new ClientWindow(name, passwd, port);
-		/*
-		 * for (char i : passwd) { i = 0; // zeroes password in memory }
-		 */
+		new ClientWindow(socket, name, address, port);
 	}
 
 	private boolean authenticate() throws LoginException
 	{
-		boolean validated = false;
+		boolean validated = true;
 		char[] passwd = pwdPassword.getPassword();
 
 		return validated;
@@ -136,7 +144,8 @@ public class Login extends JFrame implements GUIWindow
 	/**
 	 * Main function of application
 	 * 
-	 * @param args no use of arguments here
+	 * @param args
+	 *            no use of arguments here
 	 */
 	public static void main(String[] args)
 	{

@@ -15,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SealedObject;
 
+import com.chatapp.Client;
 import com.chatapp.GUIWindow;
 import com.chatapp.User;
 import com.chatapp.security.CipherSystem;
@@ -34,16 +35,20 @@ public class UDPSocket
 	/** Running flag */
 	private boolean running = false;
 
+	/** Client threads: sending and listening for data */
+	private Thread send, sendDirect, listen, login;
+
 	/** Client's IP converted to Inet class */
 	private InetAddress ip;
 	/** Reference to parent GUI window */
 	private GUIWindow window_ref;
 
-	public UDPSocket(GUIWindow parent, String address_, int port_) throws UnknownHostException
+	public UDPSocket(GUIWindow parent, int ID, String address_, int port_) throws UnknownHostException
 	{
 		this.address = address_;
 		this.port = port_;
 		this.window_ref = parent;
+		this.ID = ID;
 	}
 
 	/**
@@ -76,7 +81,13 @@ public class UDPSocket
 		this.ID = id;
 	}
 
+	public void setParent(GUIWindow parent)
+	{
+		this.window_ref = parent;
+	}
+
 	/**
+	 * 
 	 * Getter for Client's ID
 	 * 
 	 * @return Client's ID
@@ -145,6 +156,30 @@ public class UDPSocket
 	}
 
 	/**
+	 * Sends login packet to the server and gets reply
+	 */
+	public void login()
+	{
+		login = new Thread("Login")
+		{
+			public void run()
+			{
+				try
+				{
+					send(Packet.Type.LOGIN, "Login");
+					Thread.sleep(3000);
+					Packet p = receive();
+					if (p.message == "TRUE") System.out.println("");// set authenticated otherwise dont
+				} catch (InterruptedException ex)
+				{
+					ex.printStackTrace();
+				}
+			}
+		};
+		login.start();
+	}
+
+	/**
 	 * Sends <code>Packet</code> to the Server
 	 * 
 	 * @param type Type of packet
@@ -153,26 +188,33 @@ public class UDPSocket
 	 */
 	public void send(final Packet.Type type, final String message)
 	{
-		try
+		send = new Thread("Send")
 		{
-			Packet p = new Packet(ID, type, message);
-			SealedObject e_packet = CipherSystem.encrypt(p);
-			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			ObjectOutputStream os = new ObjectOutputStream(outputStream);
-			os.writeObject(e_packet);
-			byte[] data = outputStream.toByteArray();
-			DatagramPacket packet = new DatagramPacket(data, data.length, ip, port);
-			socket.send(packet);
-		} catch (IOException ex)
-		{
-			ex.printStackTrace();
-		} catch (NoSuchAlgorithmException e)
-		{
-			e.printStackTrace();
-		} catch (NoSuchPaddingException e)
-		{
-			e.printStackTrace();
-		}
+			public void run()
+			{
+				try
+				{
+					Packet p = new Packet(ID, type, message);
+					SealedObject e_packet = CipherSystem.encrypt(p);
+					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+					ObjectOutputStream os = new ObjectOutputStream(outputStream);
+					os.writeObject(e_packet);
+					byte[] data = outputStream.toByteArray();
+					DatagramPacket packet = new DatagramPacket(data, data.length, ip, port);
+					socket.send(packet);
+				} catch (IOException ex)
+				{
+					ex.printStackTrace();
+				} catch (NoSuchAlgorithmException e)
+				{
+					e.printStackTrace();
+				} catch (NoSuchPaddingException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		};
+		send.start();
 	}
 
 	/**
@@ -182,26 +224,33 @@ public class UDPSocket
 	 */
 	public void sendDirect(final String message)
 	{
-		try
+		sendDirect = new Thread("Send Direct")
 		{
-			Packet p = new Packet(ID, Packet.Type.DIRECT_MESSAGE, message);
-			SealedObject e_packet = CipherSystem.encrypt(p);
-			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			ObjectOutputStream os = new ObjectOutputStream(outputStream);
-			os.writeObject(e_packet);
-			byte[] data = outputStream.toByteArray();
-			DatagramPacket packet = new DatagramPacket(data, data.length, ip, port);
-			socket.send(packet);
-		} catch (IOException ex)
-		{
-			ex.printStackTrace();
-		} catch (NoSuchAlgorithmException e)
-		{
-			e.printStackTrace();
-		} catch (NoSuchPaddingException e)
-		{
-			e.printStackTrace();
-		}
+			public void run()
+			{
+				try
+				{
+					Packet p = new Packet(ID, Packet.Type.DIRECT_MESSAGE, message);
+					SealedObject e_packet = CipherSystem.encrypt(p);
+					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+					ObjectOutputStream os = new ObjectOutputStream(outputStream);
+					os.writeObject(e_packet);
+					byte[] data = outputStream.toByteArray();
+					DatagramPacket packet = new DatagramPacket(data, data.length, ip, port);
+					socket.send(packet);
+				} catch (IOException ex)
+				{
+					ex.printStackTrace();
+				} catch (NoSuchAlgorithmException e)
+				{
+					e.printStackTrace();
+				} catch (NoSuchPaddingException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		};
+		sendDirect.start();
 	}
 
 	/**
@@ -210,41 +259,48 @@ public class UDPSocket
 	 */
 	public void listen()
 	{
-		while (running)
+		listen = new Thread("Listen")
 		{
-			Packet packet = receive();
-			if (packet.type == Packet.Type.CONNECT)
+			public void run()
 			{
-				setID(Integer.parseInt(packet.message));
-				connected = true;
-				console("Succesfully connected to server with ID: " + getID());
-			} else if (packet.type == Packet.Type.MESSAGE)
-			{
-				console(packet.message);
-			} else if (packet.type == Packet.Type.PING)
-			{
-				send(packet.type, "ping");
-			} else if (packet.type == Packet.Type.DISCONNECT)
-			{
-				console("You have timed out");
-				connected = false;
-			} else if (packet.type == Packet.Type.DIRECT_MESSAGE)
-			{
-				console(packet.message); // temporary
-			} else if (packet.type == Packet.Type.USER_ONLINE)
-			{
-				console("User " + packet.message + " just came online!");
-				String name[] = packet.message.split("\\.");
-				// users.add(new User(name[1].trim(), Integer.parseInt(name[0].trim())));
-				window_ref.addUser(new User(name[1].trim(), Integer.parseInt(name[0].trim())));
-			} else if (packet.type == Packet.Type.USER_OFFLINE)
-			{
-				console("User " + packet.message + " disconnected!");
-				String name[] = packet.message.split("\\.");
-				// users.remove(new User(name[1].trim(), Integer.parseInt(name[0].trim())));
-				window_ref.removeUser(new User(name[1].trim(), Integer.parseInt(name[0].trim())));
+				while (running)
+				{
+					Packet packet = receive();
+					if (packet.type == Packet.Type.CONNECT)
+					{
+						setID(Integer.parseInt(packet.message));
+						connected = true;
+						console("Succesfully connected to server with ID: " + getID());
+					} else if (packet.type == Packet.Type.MESSAGE)
+					{
+						console(packet.message);
+					} else if (packet.type == Packet.Type.PING)
+					{
+						send(packet.type, "ping");
+					} else if (packet.type == Packet.Type.DISCONNECT)
+					{
+						console("You have timed out");
+						connected = false;
+					} else if (packet.type == Packet.Type.DIRECT_MESSAGE)
+					{
+						console(packet.message); // temporary
+					} else if (packet.type == Packet.Type.USER_ONLINE)
+					{
+						console("User " + packet.message + " just came online!");
+						String name[] = packet.message.split("\\.");
+						// users.add(new User(name[1].trim(), Integer.parseInt(name[0].trim())));
+						window_ref.addUser(new User(name[1].trim(), Integer.parseInt(name[0].trim())));
+					} else if (packet.type == Packet.Type.USER_OFFLINE)
+					{
+						console("User " + packet.message + " disconnected!");
+						String name[] = packet.message.split("\\.");
+						// users.remove(new User(name[1].trim(), Integer.parseInt(name[0].trim())));
+						window_ref.removeUser(new User(name[1].trim(), Integer.parseInt(name[0].trim())));
+					}
+				}
 			}
-		}
+		};
+		listen.start();
 	}
 
 	/**
@@ -255,6 +311,26 @@ public class UDPSocket
 	public void console(String message)
 	{
 		window_ref.console(message);
+	}
+
+	/**
+	 * Closes sockets and application
+	 * 
+	 */
+	public void close()
+	{
+		new Thread()
+		{
+			public void run()
+			{
+				synchronized (socket)
+				{
+					connected = false;
+					socket.close();
+					running = false;
+				}
+			}
+		}.start();
 	}
 
 }

@@ -29,6 +29,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.text.DefaultCaret;
 
 import com.chatapp.networking.Packet;
+import com.chatapp.networking.UDPSocket;
 
 /**
  * Client window class
@@ -64,10 +65,10 @@ public class ClientWindow extends JFrame implements Runnable, GUIWindow
 	/**
 	 * Create the frame.
 	 */
-	public ClientWindow(String name_, String address_, int port_)
+	public ClientWindow(UDPSocket sock, String name_, String address_, int port_)
 	{
 		setTitle("Chat Application: " + name_);
-		client = new Client(this, name_, address_, port_);
+		client = new Client(this, sock, name_, address_, port_);
 		boolean connect = openConnection();
 		if (!connect)
 		{
@@ -81,7 +82,7 @@ public class ClientWindow extends JFrame implements Runnable, GUIWindow
 		run.start();
 	}
 
-	public ClientWindow(String name_, char[] passwd, int port_)
+	public ClientWindow(UDPSocket sock, String name_, char[] passwd, int port_)
 	{
 		setTitle("Chat Application: " + name_);
 		String ID = "";
@@ -90,7 +91,7 @@ public class ClientWindow extends JFrame implements Runnable, GUIWindow
 
 		for (char i : passwd)
 		{
-			i = 0; // zeroes password out int memory
+			i = 0; // zeroes password out in memory
 		}
 		boolean connect = openConnection();
 		if (!connect)
@@ -113,7 +114,8 @@ public class ClientWindow extends JFrame implements Runnable, GUIWindow
 	 */
 	private boolean openConnection()
 	{
-		return client.openConnection();
+		// return client.openConnection();
+		return true;
 	}
 
 	/**
@@ -131,8 +133,7 @@ public class ClientWindow extends JFrame implements Runnable, GUIWindow
 		}
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(880, 550);
-		setMinimumSize(new Dimension(880, 550)); // not sure if its platform
-													// dependant
+		setMinimumSize(new Dimension(880, 550)); // not sure if its platform dependant
 		setLocationRelativeTo(null);
 
 		addWindowListener(new WindowAdapter()
@@ -312,7 +313,15 @@ public class ClientWindow extends JFrame implements Runnable, GUIWindow
 	 */
 	public void listen()
 	{
-		client.listen();
+		// client.listen();
+	}
+
+	/**
+	 * Closes resources
+	 */
+	public void close()
+	{
+
 	}
 
 	/**

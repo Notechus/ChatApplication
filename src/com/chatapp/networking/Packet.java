@@ -19,13 +19,18 @@ public class Packet implements Serializable
 	public String message;
 	/** Destination ID */
 	public int dID;
+	/** Packet size in bytes */
+	private int size;
 
 	/**
 	 * Constructs <code>Packet</code>
 	 * 
-	 * @param ID_ ID of client
-	 * @param type_ type of packet
-	 * @param message_ message to be sent
+	 * @param ID_
+	 *            ID of client
+	 * @param type_
+	 *            type of packet
+	 * @param message_
+	 *            message to be sent
 	 */
 	public Packet(int ID_, Type type_, String message_)
 	{
@@ -33,15 +38,20 @@ public class Packet implements Serializable
 		this.type = type_;
 		this.message = message_;
 		this.dID = 0; // normally we send to server which ID is 0
+		this.size = 4 * 4 * 4 * message.length();
 	}
 
 	/**
 	 * Constructs <code>Packet</code> with specified destination ID
 	 * 
-	 * @param ID_ client's ID
-	 * @param type_ type of packet
-	 * @param message_ message to be sent
-	 * @param destinationID destination client ID
+	 * @param ID_
+	 *            client's ID
+	 * @param type_
+	 *            type of packet
+	 * @param message_
+	 *            message to be sent
+	 * @param destinationID
+	 *            destination client ID
 	 */
 	public Packet(int ID_, Type type_, String message_, int destinationID)
 	{
@@ -49,6 +59,7 @@ public class Packet implements Serializable
 		this.type = type_;
 		this.message = message_;
 		this.dID = destinationID;
+		this.size = 4 * 4 * 4 * message.length();
 	}
 
 	/**
@@ -70,4 +81,5 @@ public class Packet implements Serializable
 		CONNECT, DISCONNECT, MESSAGE, DIRECT_MESSAGE, PING, ACK, USER_ONLINE, USER_OFFLINE, LOGIN
 		// ACK - acknowledgement from server, will be used later
 	}
+
 }
